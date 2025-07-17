@@ -170,14 +170,14 @@ export default function EmployeeProfile({ params }: { params: { id: string } }) 
                         <div className="mb-2">
                           <span className="font-medium">Topics Discussed:</span>
                           <span className="ml-2">{meeting.topics}</span>
-                        </div>
+                          </div>
                         <div className="mb-2">
                           <span className="font-medium">Action Items:</span>
                           {meeting.action_items.length === 0 ? (
                             <span className="ml-2 text-muted-foreground">No action items</span>
                           ) : (
                             <ul className="ml-4 list-disc">
-                              {meeting.action_items.map((item) => (
+                                {meeting.action_items.map((item) => (
                                 <li key={item._id} className="flex items-center gap-2">
                                   <Checkbox checked={item.done} disabled className="pointer-events-none" />
                                   <span className={item.done ? "line-through" : ""}>{item.text}</span>
@@ -185,7 +185,7 @@ export default function EmployeeProfile({ params }: { params: { id: string } }) 
                                     <span className="text-xs text-muted-foreground">(Due: {format(new Date(item.due_date), "MMM d, yyyy")})</span>
                                   )}
                                 </li>
-                              ))}
+                                ))}
                             </ul>
                           )}
                         </div>
