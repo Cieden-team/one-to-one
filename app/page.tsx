@@ -18,10 +18,7 @@ import { useUser, UserButton } from "@clerk/nextjs"
 import type { EmployeeWithDetails } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
 import { useClerk } from "@clerk/nextjs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { useEffect } from "react"
-import { useMutation } from "convex/react"
-import { api } from "../convex/_generated/api"
+import { ManageEmployeesModal } from "@/components/manage-employees-modal"
 
 export default function Dashboard() {
   return (
@@ -51,49 +48,9 @@ function DashboardContent() {
   const { toast } = useToast()
   const { signOut } = useClerk()
 
-  // --- Admin manage employees modal ---
-  const [manageOpen, setManageOpen] = useState(false)
-  const [editRoles, setEditRoles] = useState<{[id: string]: string}>({})
-  const updateRole = useMutation(api.employees.updateRole)
-  const addEmployee = useMutation(api.employees.addEmployee)
-  const deleteEmployee = useMutation(api.employees.deleteEmployee)
-  const [newEmp, setNewEmp] = useState<{ name: string; email: string; role: string; user_type: "employee"|"lead"|"hr"; manager_id: string }>({ name: "", email: "", role: "", user_type: "employee", manager_id: "" })
-  const [adding, setAdding] = useState(false)
-
-  const handleRoleChange = (id: string, role: string) => {
-    setEditRoles((prev) => ({ ...prev, [id]: role }))
-  }
-  const handleSaveRoles = async () => {
-    for (const id in editRoles) {
-      await updateRole({ id, user_type: editRoles[id] })
-    }
-    setManageOpen(false)
-    setEditRoles({})
-    toast({ title: "Roles updated!" })
-  }
-
   const handleResetData = async () => {
     await seedData()
     toast({ title: "Data reset!", description: "Demo/mock data was restored." })
-  }
-
-  const handleAddEmployee = async () => {
-    if (!newEmp.name || !newEmp.email || !newEmp.role) return toast({ title: "Fill all fields!" })
-    await addEmployee({
-      name: newEmp.name,
-      email: newEmp.email,
-      role: newEmp.role,
-      user_type: newEmp.user_type as "employee"|"lead"|"hr",
-      manager_id: newEmp.manager_id && newEmp.manager_id !== "none" ? (newEmp.manager_id as any) : undefined,
-    })
-    setNewEmp({ name: "", email: "", role: "", user_type: "employee", manager_id: "" })
-    setAdding(false)
-    toast({ title: "Employee added!" })
-  }
-
-  const handleDeleteEmployee = async (id: string) => {
-    await deleteEmployee({ id: id as any })
-    toast({ title: "Employee deleted!" })
   }
 
   if (!currentUser) {
@@ -207,79 +164,7 @@ function DashboardContent() {
             </div>
             <div className="ml-auto flex items-center gap-2">
               {isAdmin && (
-                <Dialog open={manageOpen} onOpenChange={setManageOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">Manage Employees</Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>Manage Employees & Roles</DialogTitle>
-                    </DialogHeader>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full text-sm">
-                        <thead>
-                          <tr>
-                            <th className="text-left p-2">Name</th>
-                            <th className="text-left p-2">Email</th>
-                            <th className="text-left p-2">Role</th>
-                            <th className="text-left p-2">User Type</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {employees?.map((emp) => (
-                            <tr key={emp._id}>
-                              <td className="p-2">{emp.name}</td>
-                              <td className="p-2">{emp.email}</td>
-                              <td className="p-2">{emp.role}</td>
-                              <td className="p-2">
-                                <Select value={editRoles[emp._id] ?? emp.user_type} onValueChange={val => handleRoleChange(emp._id, val as "employee"|"lead"|"hr")}>
-                                  <SelectTrigger className="w-32">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="hr">Admin</SelectItem>
-                                    <SelectItem value="lead">Lead</SelectItem>
-                                    <SelectItem value="employee">Employee</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="mb-4 border-b pb-4">
-                      <h4 className="font-semibold mb-2">Add New Employee</h4>
-                      <div className="flex flex-wrap gap-2 items-end">
-                        <Input placeholder="Name" value={newEmp.name} onChange={e => setNewEmp({ ...newEmp, name: e.target.value })} className="w-32" />
-                        <Input placeholder="Email" value={newEmp.email} onChange={e => setNewEmp({ ...newEmp, email: e.target.value })} className="w-44" />
-                        <Input placeholder="Role" value={newEmp.role} onChange={e => setNewEmp({ ...newEmp, role: e.target.value })} className="w-32" />
-                        <Select value={newEmp.user_type} onValueChange={val => setNewEmp({ ...newEmp, user_type: val as "employee"|"lead"|"hr" })}>
-                          <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="hr">Admin</SelectItem>
-                            <SelectItem value="lead">Lead</SelectItem>
-                            <SelectItem value="employee">Employee</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Select value={newEmp.manager_id || "none"} onValueChange={val => setNewEmp({ ...newEmp, manager_id: val })}>
-                          <SelectTrigger className="w-40"><SelectValue placeholder="Manager (optional)" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No Manager</SelectItem>
-                            {employees?.map((emp) => (
-                              <SelectItem key={emp._id} value={emp._id}>{emp.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button size="sm" onClick={handleAddEmployee}>Add</Button>
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2 pt-4">
-                      <Button variant="outline" onClick={() => setManageOpen(false)}>Cancel</Button>
-                      <Button onClick={handleSaveRoles}>Save Changes</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <ManageEmployeesModal userEmail={userEmail} isAdmin={isAdmin} />
               )}
               <div className="relative group">
                 <UserButton afterSignOutUrl="/" />
@@ -478,7 +363,6 @@ function DashboardContent() {
                                   New 1:1
                                 </Button>
                               </Link>
-                              <Button variant="destructive" size="sm" onClick={() => handleDeleteEmployee(employee._id)}>Delete</Button>
                             </div>
                           </TableCell>
                         </TableRow>

@@ -8,6 +8,7 @@ export default defineSchema({
     manager_id: v.optional(v.id("employees")),
     email: v.string(),
     user_type: v.union(v.literal("employee"), v.literal("lead"), v.literal("hr")),
+    archived: v.optional(v.boolean()),
   }).index("by_manager", ["manager_id"]),
 
   one_on_ones: defineTable({

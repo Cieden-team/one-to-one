@@ -18,14 +18,17 @@ export const list = query({
     const currentUser = args.user_email ? 
       employees.find(emp => emp.email === args.user_email) : null
 
-    // If user is HR, return all employees
+    // Filter out archived employees
+    const activeEmployees = employees.filter(emp => !emp.archived)
+
+    // If user is HR, return all active employees
     if (currentUser?.user_type === "hr") {
-      return employees
+      return activeEmployees
     }
 
     // If user is a lead, return only their direct reports
     if (currentUser?.user_type === "lead") {
-      return employees.filter((emp) => emp.manager_id === currentUser._id)
+      return activeEmployees.filter((emp) => emp.manager_id === currentUser._id)
     }
 
     // Regular employees can't see the list
@@ -47,10 +50,13 @@ export const getWithLastMeeting = query({
     const currentUser = args.user_email ? 
       employees.find(emp => emp.email === args.user_email) : null
 
+    // Filter out archived employees
+    const activeEmployees = employees.filter(emp => !emp.archived)
+
     // Filter employees based on access level
-    let filteredEmployees = employees
+    let filteredEmployees = activeEmployees
     if (currentUser?.user_type === "lead") {
-      filteredEmployees = employees.filter((emp) => emp.manager_id === currentUser._id)
+      filteredEmployees = activeEmployees.filter((emp) => emp.manager_id === currentUser._id)
     } else if (currentUser?.user_type !== "hr") {
       return []
     }
@@ -81,6 +87,51 @@ export const updateRole = mutation({
   args: { id: v.id("employees"), user_type: v.union(v.literal("employee"), v.literal("lead"), v.literal("hr")) },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, { user_type: args.user_type })
+  },
+})
+
+export const updateEmployee = mutation({
+  args: { 
+    id: v.id("employees"), 
+    user_type: v.optional(v.union(v.literal("employee"), v.literal("lead"), v.literal("hr"))),
+    manager_id: v.optional(v.union(v.id("employees"), v.null())),
+    role: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const updates: any = {}
+    if (args.user_type !== undefined) updates.user_type = args.user_type
+    if (args.manager_id !== undefined) updates.manager_id = args.manager_id
+    if (args.role !== undefined) updates.role = args.role
+    await ctx.db.patch(args.id, updates)
+  },
+})
+
+export const archiveEmployee = mutation({
+  args: { id: v.id("employees") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, { archived: true })
+  },
+})
+
+export const unarchiveEmployee = mutation({
+  args: { id: v.id("employees") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, { archived: false })
+  },
+})
+
+export const getAllEmployeesForAdmin = query({
+  args: { user_email: v.string() },
+  handler: async (ctx, args) => {
+    const employees = await ctx.db.query("employees").collect()
+    const currentUser = employees.find(emp => emp.email === args.user_email)
+    
+    // Only HR can see all employees including archived
+    if (currentUser?.user_type !== "hr") {
+      return []
+    }
+    
+    return employees
   },
 })
 

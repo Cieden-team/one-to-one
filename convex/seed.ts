@@ -78,6 +78,7 @@ export const seedData = mutation({
         role: emp.position,
         email: emp.email,
         user_type,
+        archived: false,
       });
       oldIdToNewId.set(emp.employee_id, newId);
     }
