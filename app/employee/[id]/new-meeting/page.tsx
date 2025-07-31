@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowLeft, Plus, Trash2, Calendar } from "lucide-react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useEmployee, useEmployees, useCurrentUser, useCreateOneOnOne } from "@/lib/convex-service"
+import { useUser } from "@clerk/nextjs"
 
 interface ActionItem {
   text: string
@@ -20,17 +21,20 @@ interface ActionItem {
   done: boolean
 }
 
-const CURRENT_USER_EMAIL = "yuriy.mykhasyak@cieden.com" // TODO: замінити на реальний email з auth
-
 export default function NewMeeting({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const { user } = useUser()
+  const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || ""
+  
   const employee = useEmployee(params.id)
-  const allPeople = useEmployees(CURRENT_USER_EMAIL) // HR бачить всіх
-  const currentUser = useCurrentUser(CURRENT_USER_EMAIL)
+  const allPeople = useEmployees(userEmail) // HR бачить всіх
+  const currentUser = useCurrentUser(userEmail)
   const createOneOnOne = useCreateOneOnOne()
-  const [checkedEmployee, setCheckedEmployee] = useState(false)
 
-  const [date, setDate] = useState("")
+  // Автоматичне заповнення сьогоднішньої дати
+  const today = new Date().toISOString().split('T')[0]
+  
+  const [date, setDate] = useState(today)
   const [personId, setPersonId] = useState<any>("")
   const [topics, setTopics] = useState("")
   const [status, setStatus] = useState<"Green" | "Yellow" | "Red" | "">("")
@@ -41,19 +45,28 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
   const handleStatusChange = (val: string) => setStatus(val as "Green" | "Yellow" | "Red")
   const handleWorkloadChange = (val: string) => setWorkload(val as "Low" | "Balanced" | "Overloaded")
 
-  // Автозаповнення Conducted By
+  // Автозаповнення Conducted By поточним користувачем
   useEffect(() => {
     if (currentUser && currentUser._id) {
       setPersonId(currentUser._id)
     }
   }, [currentUser])
 
-  useEffect(() => {
-    if (employee !== undefined) setCheckedEmployee(true)
-    if (employee === null && checkedEmployee) {
-      router.replace("/")
-    }
-  }, [employee, checkedEmployee, router])
+
+
+  // Фільтруємо доступних людей (тільки HR та Lead) та сортуємо поточного користувача першим
+  const availablePeople = (allPeople || [])
+    .filter((emp) => emp.user_type === "hr" || emp.user_type === "lead")
+    .sort((a, b) => {
+      // Поточний користувач першим
+      if (a._id === currentUser?._id) return -1
+      if (b._id === currentUser?._id) return 1
+      // Потім HR, потім Lead
+      if (a.user_type === "hr" && b.user_type !== "hr") return -1
+      if (b.user_type === "hr" && a.user_type !== "hr") return 1
+      // Потім за іменем
+      return a.name.localeCompare(b.name)
+    })
 
   if (employee === undefined) {
     return (
@@ -66,9 +79,18 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
     )
   }
 
-  const availablePeople = (allPeople || []).filter(
-    (emp) => emp.user_type === "hr" || emp.user_type === "lead"
-  )
+  if (employee === null) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-muted-foreground">Employee not found</p>
+          <Link href="/">
+            <Button className="mt-4">Back to Dashboard</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   const addActionItem = () => {
     setActionItems([...actionItems, { text: "", due_date: "", done: false }])
@@ -150,6 +172,7 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
                   <div>
                     <Label htmlFor="date">Meeting Date</Label>
                     <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+                    <p className="text-xs text-muted-foreground mt-1">Today's date is pre-filled. You can change it if needed.</p>
                   </div>
                   <div>
                     <Label htmlFor="person">1:1 Conducted By</Label>
@@ -160,11 +183,15 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
                       <SelectContent>
                         {availablePeople.map((person) => (
                           <SelectItem key={person._id} value={person._id}>
-                            {person.name} ({person.user_type.toUpperCase()})
+                            {person._id === currentUser?._id 
+                              ? `${person.name} (You - ${person.user_type.toUpperCase()})`
+                              : `${person.name} (${person.user_type.toUpperCase()})`
+                            }
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground mt-1">You are pre-selected. You can change to another HR or Lead if needed.</p>
                   </div>
                 </div>
 
