@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { ChevronDown, Filter, Plus, Users, Calendar, AlertTriangle, RefreshCw } from "lucide-react"
+import { ChevronDown, Filter, Plus, Users, Calendar, AlertTriangle } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useEmployees, useCurrentUser, useSeedData } from "@/lib/convex-service"
+import { useEmployees, useCurrentUser } from "@/lib/convex-service"
 import { useUser, UserButton } from "@clerk/nextjs"
 import type { EmployeeWithDetails } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
@@ -44,14 +44,10 @@ function DashboardContent() {
   const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || ""
   const employees = useEmployees(userEmail)
   const currentUser = useCurrentUser(userEmail)
-  const seedData = useSeedData()
   const { toast } = useToast()
   const { signOut } = useClerk()
 
-  const handleResetData = async () => {
-    await seedData()
-    toast({ title: "Data reset!", description: "Demo/mock data was restored." })
-  }
+
 
   if (!currentUser) {
     return (
@@ -169,10 +165,6 @@ function DashboardContent() {
               <div className="relative group">
                 <UserButton afterSignOutUrl="/" />
               </div>
-              <Button variant="outline" size="sm" onClick={handleResetData}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Reset Data
-              </Button>
             </div>
           </div>
         </div>
