@@ -17,7 +17,7 @@ export const getActionItems = query({
         const oneOnOne = await ctx.db.get(item.one_on_one_id)
         const employee = oneOnOne ? await ctx.db.get(oneOnOne.employee_id) : null
         const responsible = item.responsible_id ? await ctx.db.get(item.responsible_id) : null
-        const createdBy = await ctx.db.get(item.created_by)
+        const createdBy = item.created_by ? await ctx.db.get(item.created_by) : null
         
         return {
           ...item,
@@ -49,7 +49,11 @@ export const getActionItems = query({
     filteredItems = filteredItems.filter(item => item.progress !== "archived")
     
     // Сортуємо від новіших до старіших
-    return filteredItems.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    return filteredItems.sort((a, b) => {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+      return dateB - dateA
+    })
   },
 })
 
@@ -123,4 +127,6 @@ export const deleteActionItem = mutation({
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id)
   },
-}) 
+})
+
+ 

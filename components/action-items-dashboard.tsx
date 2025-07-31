@@ -231,7 +231,7 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
                     </TableCell>
                     <TableCell>
                       <span className="text-sm text-muted-foreground">
-                        {format(new Date(item.created_at), "MMM dd")}
+                        {item.created_at ? format(new Date(item.created_at), "MMM dd") : "Unknown"}
                       </span>
                     </TableCell>
                   </TableRow>
