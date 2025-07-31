@@ -4,7 +4,6 @@ import { api } from "../convex/_generated/api"
 import { Button } from "./ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Badge } from "./ui/badge"
-import { Checkbox } from "./ui/checkbox"
 import { Input } from "./ui/input"
 import { Label } from "./ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
@@ -90,17 +89,7 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
     }
   }
   
-  const handleDoneChange = async (itemId: string, done: boolean) => {
-    try {
-      await updateActionItem({
-        id: itemId as any,
-        done
-      })
-      toast({ title: "Status updated successfully" })
-    } catch (error) {
-      toast({ title: "Failed to update status", variant: "destructive" })
-    }
-  }
+
   
   const startEditing = (item: any) => {
     setEditingId(item._id)
