@@ -14,11 +14,14 @@ import { ArrowLeft, Plus, Trash2, Calendar } from "lucide-react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useEmployee, useEmployees, useCurrentUser, useCreateOneOnOne } from "@/lib/convex-service"
 import { useUser } from "@clerk/nextjs"
+import { useMutation } from "convex/react"
+import { api } from "../../../../convex/_generated/api"
 
 interface ActionItem {
   text: string
   due_date: string
   done: boolean
+  responsible_id: string
 }
 
 export default function NewMeeting({ params }: { params: { id: string } }) {
@@ -93,7 +96,7 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
   }
 
   const addActionItem = () => {
-    setActionItems([...actionItems, { text: "", due_date: "", done: false }])
+    setActionItems([...actionItems, { text: "", due_date: "", done: false, responsible_id: employee._id }])
   }
 
   const removeActionItem = (index: number) => {
@@ -124,7 +127,7 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
     if (!employee || !personId) return
     setIsSubmitting(true)
     try {
-      await createOneOnOne({
+      const meeting = await createOneOnOne({
         employee_id: employee._id as any,
         date,
         person_id: personId as any,
@@ -133,6 +136,20 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
         workload: workload as "Low" | "Balanced" | "Overloaded",
         action_items: actionItems.filter((item) => item.text.trim() !== ""),
       })
+      
+      // Створюємо action items окремо з новою структурою
+      if (meeting && actionItems.length > 0 && currentUser) {
+        const createActionItem = useMutation(api.actionItems.createActionItem)
+        for (const item of actionItems.filter((item) => item.text.trim() !== "")) {
+          await createActionItem({
+            one_on_one_id: meeting as any,
+            text: item.text,
+            due_date: item.due_date,
+            responsible_id: item.responsible_id as any,
+            created_by: currentUser._id as any,
+          })
+        }
+      }
       router.push(`/employee/${params.id}`)
     } catch (error) {
       // TODO: show error toast
@@ -277,11 +294,37 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
                               value={item.text}
                               onChange={(e) => updateActionItem(index, "text", e.target.value)}
                             />
-                            <Input
-                              type="date"
-                              value={item.due_date}
-                              onChange={(e) => updateActionItem(index, "due_date", e.target.value)}
-                            />
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Due date</Label>
+                                <Input
+                                  type="date"
+                                  value={item.due_date}
+                                  onChange={(e) => updateActionItem(index, "due_date", e.target.value)}
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Responsible</Label>
+                                <Select
+                                  value={item.responsible_id}
+                                  onValueChange={(val) => updateActionItem(index, "responsible_id", val)}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select responsible" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value={employee._id}>
+                                      {employee.name} (Employee)
+                                    </SelectItem>
+                                    {availablePeople.map((person) => (
+                                      <SelectItem key={person._id} value={person._id}>
+                                        {person.name} ({person.user_type.toUpperCase()})
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
                           </div>
                           <Button type="button" variant="ghost" size="sm" onClick={() => removeActionItem(index)}>
                             <Trash2 className="h-4 w-4" />

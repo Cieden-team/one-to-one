@@ -159,6 +159,11 @@ function DashboardContent() {
               <h1 className="text-xl font-semibold">1:1 Meeting Tracker</h1>
             </div>
             <div className="ml-auto flex items-center gap-2">
+              <Link href="/action-items">
+                <Button variant="outline" size="sm">
+                  Action Items
+                </Button>
+              </Link>
               {isAdmin && (
                 <ManageEmployeesModal userEmail={userEmail} isAdmin={isAdmin} />
               )}

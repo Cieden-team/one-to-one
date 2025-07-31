@@ -28,5 +28,9 @@ export default defineSchema({
     text: v.string(),
     done: v.boolean(),
     due_date: v.string(),
+    responsible_id: v.optional(v.id("employees")),
+    progress: v.union(v.literal("done"), v.literal("in_progress"), v.literal("overdue"), v.literal("archived")),
+    created_by: v.id("employees"),
+    created_at: v.string(),
   }).index("by_one_on_one", ["one_on_one_id"]),
 })

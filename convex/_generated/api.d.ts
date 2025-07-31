@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as actionItems from "../actionItems.js";
 import type * as employees from "../employees.js";
 import type * as oneOnOnes from "../oneOnOnes.js";
 import type * as seed from "../seed.js";
@@ -26,6 +27,7 @@ import type * as seed from "../seed.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  actionItems: typeof actionItems;
   employees: typeof employees;
   oneOnOnes: typeof oneOnOnes;
   seed: typeof seed;
