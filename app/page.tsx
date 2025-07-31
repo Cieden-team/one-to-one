@@ -71,9 +71,9 @@ function DashboardContent() {
   }
 
   // Access control logic
-  const isAdmin = userEmail === "kateryna.gorodova@cieden.com"
-  const isLead = currentUser.user_type === "lead"
-  const isEmployee = currentUser.user_type === "employee"
+  const isAdmin = currentUser?.user_type === "hr"
+  const isLead = currentUser?.user_type === "lead"
+  const isEmployee = currentUser?.user_type === "employee"
 
   if (isEmployee) {
     return (
