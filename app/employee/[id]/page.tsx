@@ -34,25 +34,25 @@ export default function EmployeeProfile({ params }: { params: { id: string } }) 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Green":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+        return "bg-[#6AC36A]/10 text-[#6AC36A] border-[#6AC36A]/20 dark:bg-[#6AC36A]/20 dark:text-[#6AC36A] dark:border-[#6AC36A]/30"
       case "Yellow":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+        return "bg-[#FF9900]/10 text-[#FF9900] border-[#FF9900]/20 dark:bg-[#FF9900]/20 dark:text-[#FF9900] dark:border-[#FF9900]/30"
       case "Red":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+        return "bg-[#F44436]/10 text-[#F44436] border-[#F44436]/20 dark:bg-[#F44436]/20 dark:text-[#F44436] dark:border-[#F44436]/30"
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+        return "bg-[#A5A5A5]/10 text-[#A5A5A5] border-[#A5A5A5]/20 dark:bg-[#A5A5A5]/20 dark:text-[#A5A5A5] dark:border-[#A5A5A5]/30"
     }
   }
   const getWorkloadColor = (workload: string) => {
     switch (workload) {
       case "Low":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+        return "bg-[#6B8194]/10 text-[#6B8194] border-[#6B8194]/20 dark:bg-[#6B8194]/20 dark:text-[#6B8194] dark:border-[#6B8194]/30"
       case "Balanced":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+        return "bg-[#6AC36A]/10 text-[#6AC36A] border-[#6AC36A]/20 dark:bg-[#6AC36A]/20 dark:text-[#6AC36A] dark:border-[#6AC36A]/30"
       case "Overloaded":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+        return "bg-[#F44436]/10 text-[#F44436] border-[#F44436]/20 dark:bg-[#F44436]/20 dark:text-[#F44436] dark:border-[#F44436]/30"
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+        return "bg-[#A5A5A5]/10 text-[#A5A5A5] border-[#A5A5A5]/20 dark:bg-[#A5A5A5]/20 dark:text-[#A5A5A5] dark:border-[#A5A5A5]/30"
     }
   }
   const getStatusExplanation = (status: string) => {
@@ -80,7 +80,7 @@ export default function EmployeeProfile({ params }: { params: { id: string } }) 
               </Button>
             </Link>
             <div className="flex items-center gap-2">
-              <User className="h-6 w-6 text-blue-600" />
+              <User className="h-6 w-6 text-[#683FFF]" />
               <h1 className="text-xl font-semibold">{employee.name}</h1>
             </div>
             <div className="ml-auto flex items-center gap-2">

@@ -237,7 +237,7 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
               </Button>
             </Link>
             <div className="flex items-center gap-2">
-              <Calendar className="h-6 w-6 text-blue-600" />
+              <Calendar className="h-6 w-6 text-[#683FFF]" />
               <h1 className="text-xl font-semibold">New 1:1 Meeting</h1>
               <span className="text-muted-foreground">with {employee.name}</span>
             </div>

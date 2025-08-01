@@ -103,26 +103,26 @@ function DashboardContent() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Green":
-        return "bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-900 dark:text-green-200 dark:hover:bg-green-900/80"
+        return "bg-[#6AC36A]/10 text-[#6AC36A] border-[#6AC36A]/20 hover:bg-[#6AC36A]/20 dark:bg-[#6AC36A]/20 dark:text-[#6AC36A] dark:border-[#6AC36A]/30"
       case "Yellow":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80 dark:bg-yellow-900 dark:text-yellow-200 dark:hover:bg-yellow-900/80"
+        return "bg-[#FF9900]/10 text-[#FF9900] border-[#FF9900]/20 hover:bg-[#FF9900]/20 dark:bg-[#FF9900]/20 dark:text-[#FF9900] dark:border-[#FF9900]/30"
       case "Red":
-        return "bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-900 dark:text-red-200 dark:hover:bg-red-900/80"
+        return "bg-[#F44436]/10 text-[#F44436] border-[#F44436]/20 hover:bg-[#F44436]/20 dark:bg-[#F44436]/20 dark:text-[#F44436] dark:border-[#F44436]/30"
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+        return "bg-[#A5A5A5]/10 text-[#A5A5A5] border-[#A5A5A5]/20 hover:bg-[#A5A5A5]/20 dark:bg-[#A5A5A5]/20 dark:text-[#A5A5A5] dark:border-[#A5A5A5]/30"
     }
   }
 
   const getWorkloadColor = (workload: string) => {
     switch (workload) {
       case "Low":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+        return "bg-[#6B8194]/10 text-[#6B8194] border-[#6B8194]/20 hover:bg-[#6B8194]/20 dark:bg-[#6B8194]/20 dark:text-[#6B8194] dark:border-[#6B8194]/30"
       case "Balanced":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+        return "bg-[#6AC36A]/10 text-[#6AC36A] border-[#6AC36A]/20 hover:bg-[#6AC36A]/20 dark:bg-[#6AC36A]/20 dark:text-[#6AC36A] dark:border-[#6AC36A]/30"
       case "Overloaded":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+        return "bg-[#F44436]/10 text-[#F44436] border-[#F44436]/20 hover:bg-[#F44436]/20 dark:bg-[#F44436]/20 dark:text-[#F44436] dark:border-[#F44436]/30"
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+        return "bg-[#A5A5A5]/10 text-[#A5A5A5] border-[#A5A5A5]/20 hover:bg-[#A5A5A5]/20 dark:bg-[#A5A5A5]/20 dark:text-[#A5A5A5] dark:border-[#A5A5A5]/30"
     }
   }
 
@@ -156,7 +156,7 @@ function DashboardContent() {
         <div className="border-b bg-card">
           <div className="flex h-16 items-center px-6">
             <div className="flex items-center gap-2">
-              <Users className="h-6 w-6 text-blue-600" />
+              <Users className="h-6 w-6 text-[#683FFF]" />
               <h1 className="text-xl font-semibold">1:1 Meeting Tracker</h1>
             </div>
             <div className="ml-auto flex items-center gap-2">
@@ -195,7 +195,7 @@ function DashboardContent() {
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-orange-600">{overdueCount}</div>
+                <div className="text-2xl font-bold text-[#FF9900]">{overdueCount}</div>
                 <p className="text-xs text-muted-foreground">No meeting in 30+ days</p>
               </CardContent>
             </Card>
@@ -205,7 +205,7 @@ function DashboardContent() {
                 <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{redStatusCount}</div>
+                <div className="text-2xl font-bold text-[#F44436]">{redStatusCount}</div>
                 <p className="text-xs text-muted-foreground">Employees needing attention</p>
               </CardContent>
             </Card>

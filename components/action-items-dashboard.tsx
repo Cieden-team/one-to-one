@@ -50,30 +50,30 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
   const getProgressColor = (progress: string) => {
     switch (progress) {
       case "done":
-        return "bg-green-100 text-green-800"
+        return "bg-[#6AC36A]/10 text-[#6AC36A] border-[#6AC36A]/20 dark:bg-[#6AC36A]/20 dark:text-[#6AC36A] dark:border-[#6AC36A]/30"
       case "in_progress":
-        return "bg-blue-100 text-blue-800"
+        return "bg-[#6B8194]/10 text-[#6B8194] border-[#6B8194]/20 dark:bg-[#6B8194]/20 dark:text-[#6B8194] dark:border-[#6B8194]/30"
       case "overdue":
-        return "bg-red-100 text-red-800"
+        return "bg-[#F44436]/10 text-[#F44436] border-[#F44436]/20 dark:bg-[#F44436]/20 dark:text-[#F44436] dark:border-[#F44436]/30"
       case "archived":
-        return "bg-gray-100 text-gray-800"
+        return "bg-[#A5A5A5]/10 text-[#A5A5A5] border-[#A5A5A5]/20 dark:bg-[#A5A5A5]/20 dark:text-[#A5A5A5] dark:border-[#A5A5A5]/30"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-[#A5A5A5]/10 text-[#A5A5A5] border-[#A5A5A5]/20 dark:bg-[#A5A5A5]/20 dark:text-[#A5A5A5] dark:border-[#A5A5A5]/30"
     }
   }
   
   const getProgressIcon = (progress: string) => {
     switch (progress) {
       case "done":
-        return <CheckCircle className="h-4 w-4" />
+        return <CheckCircle className="h-4 w-4 text-[#6AC36A]" />
       case "in_progress":
-        return <Clock className="h-4 w-4" />
+        return <Clock className="h-4 w-4 text-[#6B8194]" />
       case "overdue":
-        return <AlertCircle className="h-4 w-4" />
+        return <AlertCircle className="h-4 w-4 text-[#F44436]" />
       case "archived":
-        return <Archive className="h-4 w-4" />
+        return <Archive className="h-4 w-4 text-[#A5A5A5]" />
       default:
-        return <Clock className="h-4 w-4" />
+        return <Clock className="h-4 w-4 text-[#6B8194]" />
     }
   }
   
@@ -180,30 +180,30 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Done</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
+            <CheckCircle className="h-4 w-4 text-[#6AC36A]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.done}</div>
+            <div className="text-2xl font-bold text-[#6AC36A]">{stats.done}</div>
             <p className="text-xs text-muted-foreground">Completed items</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-            <Clock className="h-4 w-4 text-blue-600" />
+            <Clock className="h-4 w-4 text-[#6B8194]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
+            <div className="text-2xl font-bold text-[#6B8194]">{stats.inProgress}</div>
             <p className="text-xs text-muted-foreground">Active items</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertCircle className="h-4 w-4 text-[#F44436]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.overdue}</div>
+            <div className="text-2xl font-bold text-[#F44436]">{stats.overdue}</div>
             <p className="text-xs text-muted-foreground">Past due date</p>
           </CardContent>
         </Card>
