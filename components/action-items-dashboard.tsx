@@ -79,12 +79,15 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
   
   const handleProgressChange = async (itemId: string, newProgress: string) => {
     try {
+      console.log("Updating progress for item:", itemId, "to:", newProgress)
+      
       await updateActionItem({
         id: itemId as any,
         progress: newProgress as "done" | "in_progress" | "overdue" | "archived"
       })
       toast({ title: "Progress updated successfully" })
     } catch (error) {
+      console.error("Error updating progress:", error)
       toast({ title: "Failed to update progress", variant: "destructive" })
     }
   }
@@ -126,16 +129,29 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
   
   const saveEditing = async (itemId: string) => {
     try {
-      await updateActionItem({
+      console.log("Saving edit for item:", itemId, "with form:", editForm)
+      
+      const updateData: any = {
         id: itemId as any,
         text: editForm.text,
         due_date: editForm.due_date,
-        responsible_id: editForm.responsible_id ? editForm.responsible_id as any : null,
         progress: editForm.progress
-      })
+      }
+      
+      // Тільки якщо responsible_id не пустий
+      if (editForm.responsible_id && editForm.responsible_id.trim() !== "") {
+        updateData.responsible_id = editForm.responsible_id as any
+      } else {
+        updateData.responsible_id = null
+      }
+      
+      console.log("Update data:", updateData)
+      
+      await updateActionItem(updateData)
       setEditingId(null)
       toast({ title: "Action item updated successfully" })
     } catch (error) {
+      console.error("Error saving action item:", error)
       toast({ title: "Failed to update action item", variant: "destructive" })
     }
   }
@@ -308,7 +324,14 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
                       ) : (
                         <Select
                           value={item.progress || "in_progress"}
-                          onValueChange={(value) => item._id && handleProgressChange(item._id, value)}
+                                                      onValueChange={(value) => {
+                              if (item && item._id) {
+                                handleProgressChange(item._id, value)
+                              } else {
+                                console.error("Cannot update progress for item without _id:", item)
+                                toast({ title: "Error", description: "Cannot update progress", variant: "destructive" })
+                              }
+                            }}
                         >
                           <SelectTrigger className="w-32">
                             <SelectValue />
@@ -331,7 +354,18 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
                       <div className="flex items-center justify-end gap-1">
                         {editingId === item._id ? (
                           <>
-                            <Button size="sm" variant="outline" onClick={() => item._id && saveEditing(item._id)}>
+                                                          <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => {
+                                  if (item && item._id) {
+                                    saveEditing(item._id)
+                                  } else {
+                                    console.error("Cannot save item without _id:", item)
+                                    toast({ title: "Error", description: "Cannot save this item", variant: "destructive" })
+                                  }
+                                }}
+                              >
                               <Save className="h-4 w-4" />
                             </Button>
                             <Button size="sm" variant="outline" onClick={cancelEditing}>
@@ -339,7 +373,18 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
                             </Button>
                           </>
                         ) : (
-                          <Button size="sm" variant="outline" onClick={() => startEditing(item)}>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => {
+                              if (item && item._id) {
+                                startEditing(item)
+                              } else {
+                                console.error("Cannot edit item without _id:", item)
+                                toast({ title: "Error", description: "Cannot edit this item", variant: "destructive" })
+                              }
+                            }}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                         )}
