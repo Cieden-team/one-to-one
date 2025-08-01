@@ -19,6 +19,7 @@ import type { EmployeeWithDetails } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
 import { useClerk } from "@clerk/nextjs"
 import { ManageEmployeesModal } from "@/components/manage-employees-modal"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function Dashboard() {
   return (
@@ -102,26 +103,26 @@ function DashboardContent() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Green":
-        return "bg-green-100 text-green-800 hover:bg-green-100/80"
+        return "bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-900 dark:text-green-200 dark:hover:bg-green-900/80"
       case "Yellow":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80"
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80 dark:bg-yellow-900 dark:text-yellow-200 dark:hover:bg-yellow-900/80"
       case "Red":
-        return "bg-red-100 text-red-800 hover:bg-red-100/80"
+        return "bg-red-100 text-red-800 hover:bg-red-100/80 dark:bg-red-900 dark:text-red-200 dark:hover:bg-red-900/80"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
     }
   }
 
   const getWorkloadColor = (workload: string) => {
     switch (workload) {
       case "Low":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
       case "Balanced":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
       case "Overloaded":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
     }
   }
 
@@ -151,8 +152,8 @@ function DashboardContent() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gray-50">
-        <div className="border-b bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="border-b bg-card">
           <div className="flex h-16 items-center px-6">
             <div className="flex items-center gap-2">
               <Users className="h-6 w-6 text-blue-600" />
@@ -167,6 +168,7 @@ function DashboardContent() {
               {isAdmin && (
                 <ManageEmployeesModal userEmail={userEmail} isAdmin={isAdmin} />
               )}
+              <ThemeToggle />
               <div className="relative group">
                 <UserButton afterSignOutUrl="/" />
               </div>
@@ -213,7 +215,7 @@ function DashboardContent() {
           <Card>
             <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
               <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover:bg-gray-50">
+                                  <CardHeader className="cursor-pointer hover:bg-accent">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Filter className="h-5 w-5" />

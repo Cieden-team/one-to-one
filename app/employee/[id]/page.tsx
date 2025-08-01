@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowLeft, Calendar, Plus, User } from "lucide-react"
 import { format } from "date-fns"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const CURRENT_USER_EMAIL = "yuriy.mykhasyak@cieden.com"
 
@@ -33,25 +34,25 @@ export default function EmployeeProfile({ params }: { params: { id: string } }) 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Green":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
       case "Yellow":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
       case "Red":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
     }
   }
   const getWorkloadColor = (workload: string) => {
     switch (workload) {
       case "Low":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
       case "Balanced":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
       case "Overloaded":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
     }
   }
   const getStatusExplanation = (status: string) => {
@@ -69,8 +70,8 @@ export default function EmployeeProfile({ params }: { params: { id: string } }) 
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gray-50">
-        <div className="border-b bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="border-b bg-card">
           <div className="flex h-16 items-center px-6">
             <Link href="/">
               <Button variant="ghost" size="sm" className="mr-4">
@@ -82,7 +83,8 @@ export default function EmployeeProfile({ params }: { params: { id: string } }) 
               <User className="h-6 w-6 text-blue-600" />
               <h1 className="text-xl font-semibold">{employee.name}</h1>
             </div>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
+              <ThemeToggle />
               <Link href={`/employee/${params.id}/new-meeting`}>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />

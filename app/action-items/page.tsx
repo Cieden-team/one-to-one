@@ -6,6 +6,7 @@ import { ActionItemsDashboard } from "@/components/action-items-dashboard"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function ActionItemsPage() {
   const { user } = useUser()
@@ -19,8 +20,8 @@ export default function ActionItemsPage() {
         </div>
       </SignedOut>
       <SignedIn>
-        <div className="min-h-screen bg-gray-50">
-          <div className="border-b bg-white">
+        <div className="min-h-screen bg-background">
+          <div className="border-b bg-card">
             <div className="flex h-16 items-center px-6">
               <Link href="/">
                 <Button variant="ghost" size="sm" className="mr-4">
@@ -30,6 +31,9 @@ export default function ActionItemsPage() {
               </Link>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-semibold">Action Items Dashboard</h1>
+              </div>
+              <div className="ml-auto">
+                <ThemeToggle />
               </div>
             </div>
           </div>

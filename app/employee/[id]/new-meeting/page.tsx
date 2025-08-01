@@ -17,6 +17,7 @@ import { useUser } from "@clerk/nextjs"
 import { useMutation } from "convex/react"
 import { api } from "../../../../convex/_generated/api"
 import { useToast } from "@/components/ui/use-toast"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 interface ActionItem {
   text: string
@@ -226,8 +227,8 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gray-50">
-        <div className="border-b bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="border-b bg-card">
           <div className="flex h-16 items-center px-6">
             <Link href={`/employee/${params.id}`}>
               <Button variant="ghost" size="sm" className="mr-4">
@@ -239,6 +240,9 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
               <Calendar className="h-6 w-6 text-blue-600" />
               <h1 className="text-xl font-semibold">New 1:1 Meeting</h1>
               <span className="text-muted-foreground">with {employee.name}</span>
+            </div>
+            <div className="ml-auto">
+              <ThemeToggle />
             </div>
           </div>
         </div>
