@@ -16,6 +16,7 @@ import { useEmployee, useEmployees, useCurrentUser, useCreateOneOnOne } from "@/
 import { useUser } from "@clerk/nextjs"
 import { useMutation } from "convex/react"
 import { api } from "../../../../convex/_generated/api"
+import { useToast } from "@/components/ui/use-toast"
 
 interface ActionItem {
   text: string
@@ -33,6 +34,7 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
   const allPeople = useEmployees(userEmail) // HR бачить всіх
   const currentUser = useCurrentUser(userEmail)
   const createOneOnOne = useCreateOneOnOne()
+  const createActionItem = useMutation(api.actionItems.createActionItem)
 
   // Автоматичне заповнення сьогоднішньої дати
   const today = new Date().toISOString().split('T')[0]
@@ -44,6 +46,7 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
   const [workload, setWorkload] = useState<"Low" | "Balanced" | "Overloaded" | "">("")
   const [actionItems, setActionItems] = useState<ActionItem[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { toast } = useToast()
 
   const handleStatusChange = (val: string) => setStatus(val as "Green" | "Yellow" | "Red")
   const handleWorkloadChange = (val: string) => setWorkload(val as "Low" | "Balanced" | "Overloaded")
@@ -124,9 +127,56 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!employee || !personId) return
+    
+    // Валідація обов'язкових полів
+    if (!employee || !personId) {
+      console.error("Missing required fields: employee or personId")
+      toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" })
+      return
+    }
+    
+    if (!topics.trim()) {
+      console.error("Topics is required")
+      toast({ title: "Error", description: "Please enter topics discussed", variant: "destructive" })
+      return
+    }
+    
+    if (!status) {
+      console.error("Status is required")
+      toast({ title: "Error", description: "Please select a status", variant: "destructive" })
+      return
+    }
+    
+    if (!workload) {
+      console.error("Workload is required")
+      toast({ title: "Error", description: "Please select a workload", variant: "destructive" })
+      return
+    }
+    
+    // Валідація Action Items
+    const validActionItems = actionItems.filter(item => 
+      item.text.trim() !== "" && item.due_date && item.responsible_id
+    )
+    
+    if (actionItems.length > 0 && validActionItems.length !== actionItems.length) {
+      console.error("Some action items have missing required fields")
+      toast({ title: "Error", description: "Please fill in all action item fields", variant: "destructive" })
+      return
+    }
+    
     setIsSubmitting(true)
+    
     try {
+      console.log("Creating meeting with data:", {
+        employee_id: employee._id,
+        date,
+        person_id: personId,
+        topics,
+        status,
+        workload,
+        actionItems: actionItems.filter((item) => item.text.trim() !== "")
+      })
+      
       const meeting = await createOneOnOne({
         employee_id: employee._id as any,
         date,
@@ -134,27 +184,42 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
         topics,
         status: status as "Green" | "Yellow" | "Red",
         workload: workload as "Low" | "Balanced" | "Overloaded",
-        action_items: actionItems.filter((item) => item.text.trim() !== ""),
+        action_items: validActionItems,
       })
       
+      console.log("Meeting created:", meeting)
+      
       // Створюємо action items окремо з новою структурою
-      if (meeting && actionItems.length > 0 && currentUser) {
-        const createActionItem = useMutation(api.actionItems.createActionItem)
-        for (const item of actionItems.filter((item) => item.text.trim() !== "")) {
-          await createActionItem({
-            one_on_one_id: meeting as any,
-            text: item.text,
-            due_date: item.due_date,
-            responsible_id: item.responsible_id as any,
-            created_by: currentUser._id as any,
-          })
+      if (meeting && validActionItems.length > 0 && currentUser) {
+        console.log("Creating action items:", validActionItems)
+        
+        for (const item of validActionItems) {
+          try {
+            // Перевіряємо, що всі обов'язкові поля заповнені
+            if (!item.text.trim() || !item.due_date || !item.responsible_id) {
+              console.warn("Skipping action item with missing data:", item)
+              continue
+            }
+            
+            await createActionItem({
+              one_on_one_id: meeting as any,
+              text: item.text,
+              due_date: item.due_date,
+              responsible_id: item.responsible_id as any,
+              created_by: currentUser._id as any,
+            })
+            console.log("Action item created:", item.text)
+          } catch (actionError) {
+            console.error("Failed to create action item:", actionError)
+          }
         }
       }
+      
+      toast({ title: "Success", description: "Meeting created successfully" })
       router.push(`/employee/${params.id}`)
     } catch (error) {
-      // TODO: show error toast
       console.error("Failed to create meeting:", error)
-    } finally {
+      toast({ title: "Error", description: "Failed to create meeting", variant: "destructive" })
       setIsSubmitting(false)
     }
   }
