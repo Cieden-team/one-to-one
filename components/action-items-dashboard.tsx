@@ -92,14 +92,26 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
 
   
   const startEditing = (item: any) => {
-    console.log("Starting edit for item:", item)
-    setEditingId(item._id)
-    setEditForm({
-      text: item.text || "",
-      due_date: item.due_date || "",
-      responsible_id: item.responsible_id || "",
-      progress: item.progress || "in_progress"
-    })
+    try {
+      console.log("Starting edit for item:", item)
+      
+      if (!item || !item._id) {
+        console.error("Invalid item or missing _id:", item)
+        toast({ title: "Error", description: "Invalid item data", variant: "destructive" })
+        return
+      }
+      
+      setEditingId(item._id)
+      setEditForm({
+        text: item.text || "",
+        due_date: item.due_date || "",
+        responsible_id: item.responsible_id || "",
+        progress: item.progress || "in_progress"
+      })
+    } catch (error) {
+      console.error("Error in startEditing:", error)
+      toast({ title: "Error", description: "Failed to start editing", variant: "destructive" })
+    }
   }
   
   const cancelEditing = () => {
@@ -222,7 +234,7 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
               </TableHeader>
               <TableBody>
                 {filteredItems.map((item) => (
-                  <TableRow key={item._id}>
+                    <TableRow key={item._id}>
                     <TableCell className="max-w-xs">
                       {editingId === item._id ? (
                         <Input
@@ -295,8 +307,8 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
                         </Select>
                       ) : (
                         <Select
-                          value={item.progress}
-                          onValueChange={(value) => handleProgressChange(item._id, value)}
+                          value={item.progress || "in_progress"}
+                          onValueChange={(value) => item._id && handleProgressChange(item._id, value)}
                         >
                           <SelectTrigger className="w-32">
                             <SelectValue />
@@ -319,7 +331,7 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
                       <div className="flex items-center justify-end gap-1">
                         {editingId === item._id ? (
                           <>
-                            <Button size="sm" variant="outline" onClick={() => saveEditing(item._id)}>
+                            <Button size="sm" variant="outline" onClick={() => item._id && saveEditing(item._id)}>
                               <Save className="h-4 w-4" />
                             </Button>
                             <Button size="sm" variant="outline" onClick={cancelEditing}>
