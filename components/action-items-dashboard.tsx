@@ -43,9 +43,9 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
   }
   
   // Фільтруємо за progress
-  const filteredItems = actionItems.filter(item => 
+  const filteredItems = actionItems?.filter(item => 
     progressFilter === "all" || item.progress === progressFilter
-  )
+  ) || []
   
   const getProgressColor = (progress: string) => {
     switch (progress) {
@@ -92,10 +92,11 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
 
   
   const startEditing = (item: any) => {
+    console.log("Starting edit for item:", item)
     setEditingId(item._id)
     setEditForm({
-      text: item.text,
-      due_date: item.due_date,
+      text: item.text || "",
+      due_date: item.due_date || "",
       responsible_id: item.responsible_id || "",
       progress: item.progress || "in_progress"
     })
@@ -128,10 +129,10 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
   }
   
   const stats = {
-    total: actionItems.length,
-    done: actionItems.filter(item => item.progress === "done").length,
-    inProgress: actionItems.filter(item => item.progress === "in_progress").length,
-    overdue: actionItems.filter(item => item.progress === "overdue").length,
+    total: actionItems?.length || 0,
+    done: actionItems?.filter(item => item.progress === "done").length || 0,
+    inProgress: actionItems?.filter(item => item.progress === "in_progress").length || 0,
+    overdue: actionItems?.filter(item => item.progress === "overdue").length || 0,
   }
   
   return (
@@ -229,13 +230,13 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
                           onChange={(e) => setEditForm({ ...editForm, text: e.target.value })}
                         />
                       ) : (
-                        <div className="truncate">{item.text}</div>
+                        <div className="truncate">{item.text || "No description"}</div>
                       )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{item.employee_name}</span>
+                        <span className="text-sm">{item.employee_name || "Unknown"}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -251,13 +252,13 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
                           <SelectItem value="">Unassigned</SelectItem>
                           {allEmployees?.map((emp) => (
                             <SelectItem key={emp._id} value={emp._id}>
-                              {emp.name} ({emp.user_type.toUpperCase()})
+                              {emp.name} ({emp.user_type?.toUpperCase() || "UNKNOWN"})
                             </SelectItem>
                           ))}
                         </SelectContent>
                         </Select>
                       ) : (
-                        <span className="text-sm">{item.responsible_name}</span>
+                        <span className="text-sm">{item.responsible_name || "Unassigned"}</span>
                       )}
                     </TableCell>
                     <TableCell>
