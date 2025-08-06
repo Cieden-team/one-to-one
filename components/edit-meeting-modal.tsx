@@ -71,6 +71,8 @@ export function EditMeetingModal({ meeting, employeeId, allPeople, onMeetingUpda
     setIsSubmitting(true)
     
     try {
+      console.log("Updating meeting:", meeting._id, "with data:", formData)
+      
       // Оновлюємо основний мітинг
       await updateOneOnOne({
         id: meeting._id as any,
@@ -81,9 +83,12 @@ export function EditMeetingModal({ meeting, employeeId, allPeople, onMeetingUpda
         workload: formData.workload
       })
 
+      console.log("Meeting updated successfully, now updating action items")
+
       // Оновлюємо action items
       for (const item of formData.action_items) {
         if (item._id) {
+          console.log("Updating existing action item:", item._id, item)
           // Оновлюємо існуючий action item
           await updateActionItem({
             id: item._id as any,
@@ -92,6 +97,7 @@ export function EditMeetingModal({ meeting, employeeId, allPeople, onMeetingUpda
             responsible_id: item.responsible_id || null
           })
         } else {
+          console.log("Creating new action item:", item)
           // Створюємо новий action item
           await createActionItem({
             one_on_one_id: meeting._id as any,
@@ -103,6 +109,7 @@ export function EditMeetingModal({ meeting, employeeId, allPeople, onMeetingUpda
         }
       }
 
+      console.log("All updates completed successfully")
       toast({ title: "Meeting updated successfully" })
       setIsOpen(false)
       onMeetingUpdated()
@@ -119,7 +126,9 @@ export function EditMeetingModal({ meeting, employeeId, allPeople, onMeetingUpda
     
     setIsSubmitting(true)
     try {
+      console.log("Deleting meeting:", meeting._id)
       await deleteOneOnOne({ id: meeting._id as any })
+      console.log("Meeting deleted successfully")
       toast({ title: "Meeting deleted successfully" })
       setIsOpen(false)
       onMeetingUpdated()

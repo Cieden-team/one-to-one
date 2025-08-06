@@ -22,6 +22,8 @@ export default function EmployeeProfile({ params }: { params: { id: string } }) 
   const meetings = useOneOnOnes(params.id, CURRENT_USER_EMAIL)
   const allPeople = useEmployees(CURRENT_USER_EMAIL)
   const [refreshKey, setRefreshKey] = useState(0)
+  
+  console.log("Employee profile render - refreshKey:", refreshKey, "meetings:", meetings?.length)
 
   if (employee === undefined) {
     return (
@@ -173,7 +175,10 @@ export default function EmployeeProfile({ params }: { params: { id: string } }) 
                               meeting={meeting}
                               employeeId={params.id}
                               allPeople={allPeople || []}
-                              onMeetingUpdated={() => setRefreshKey(prev => prev + 1)}
+                              onMeetingUpdated={() => {
+                                console.log("Meeting updated, refreshing data...")
+                                setRefreshKey(prev => prev + 1)
+                              }}
                             />
                           </div>
                         </div>
