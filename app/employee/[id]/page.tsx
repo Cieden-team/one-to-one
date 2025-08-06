@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { useEmployee, useOneOnOnes, useCurrentUser } from "@/lib/convex-service"
+import { useState } from "react"
+import { useEmployee, useOneOnOnes, useCurrentUser, useEmployees } from "@/lib/convex-service"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,6 +12,7 @@ import { ArrowLeft, Calendar, Plus, User } from "lucide-react"
 import { format } from "date-fns"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { EditMeetingModal } from "@/components/edit-meeting-modal"
 
 const CURRENT_USER_EMAIL = "yuriy.mykhasyak@cieden.com"
 
@@ -18,6 +20,8 @@ export default function EmployeeProfile({ params }: { params: { id: string } }) 
   const router = useRouter()
   const employee = useEmployee(params.id)
   const meetings = useOneOnOnes(params.id, CURRENT_USER_EMAIL)
+  const allPeople = useEmployees(CURRENT_USER_EMAIL)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   if (employee === undefined) {
     return (
@@ -165,6 +169,12 @@ export default function EmployeeProfile({ params }: { params: { id: string } }) 
                               </TooltipContent>
                             </Tooltip>
                             <Badge className={getWorkloadColor(meeting.workload)}>{meeting.workload}</Badge>
+                            <EditMeetingModal 
+                              meeting={meeting}
+                              employeeId={params.id}
+                              allPeople={allPeople || []}
+                              onMeetingUpdated={() => setRefreshKey(prev => prev + 1)}
+                            />
                           </div>
                         </div>
                       </CardHeader>

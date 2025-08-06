@@ -85,3 +85,38 @@ export const updateActionItem = mutation({
     await ctx.db.patch(args.id, { done: args.done })
   },
 })
+
+export const updateOneOnOne = mutation({
+  args: {
+    id: v.id("one_on_ones"),
+    date: v.string(),
+    person_id: v.id("employees"),
+    topics: v.string(),
+    status: v.union(v.literal("Green"), v.literal("Yellow"), v.literal("Red")),
+    workload: v.union(v.literal("Low"), v.literal("Balanced"), v.literal("Overloaded")),
+  },
+  handler: async (ctx, args) => {
+    const { id, ...updateData } = args
+    await ctx.db.patch(id, updateData)
+  },
+})
+
+export const deleteOneOnOne = mutation({
+  args: {
+    id: v.id("one_on_ones"),
+  },
+  handler: async (ctx, args) => {
+    // Спочатку видаляємо всі action items для цього мітингу
+    const actionItems = await ctx.db
+      .query("action_items")
+      .withIndex("by_one_on_one", (q) => q.eq("one_on_one_id", args.id))
+      .collect()
+    
+    for (const item of actionItems) {
+      await ctx.db.delete(item._id)
+    }
+    
+    // Потім видаляємо сам мітинг
+    await ctx.db.delete(args.id)
+  },
+})
