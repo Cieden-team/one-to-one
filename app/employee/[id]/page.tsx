@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useEmployee, useOneOnOnes, useCurrentUser, useEmployees } from "@/lib/convex-service"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,11 +19,20 @@ const CURRENT_USER_EMAIL = "yuriy.mykhasyak@cieden.com"
 export default function EmployeeProfile({ params }: { params: { id: string } }) {
   const router = useRouter()
   const employee = useEmployee(params.id)
+  const [refreshKey, setRefreshKey] = useState(0)
   const meetings = useOneOnOnes(params.id, CURRENT_USER_EMAIL)
   const allPeople = useEmployees(CURRENT_USER_EMAIL)
-  const [refreshKey, setRefreshKey] = useState(0)
   
-  console.log("Employee profile render - refreshKey:", refreshKey, "meetings:", meetings?.length)
+  // Force re-fetch when refreshKey changes
+  useEffect(() => {
+    console.log("refreshKey changed to:", refreshKey)
+  }, [refreshKey])
+  
+  console.log("=== Employee profile render ===")
+  console.log("refreshKey:", refreshKey)
+  console.log("meetings count:", meetings?.length)
+  console.log("meetings data:", meetings)
+  console.log("=== End render ===")
 
   if (employee === undefined) {
     return (
@@ -176,8 +185,15 @@ export default function EmployeeProfile({ params }: { params: { id: string } }) 
                               employeeId={params.id}
                               allPeople={allPeople || []}
                               onMeetingUpdated={() => {
-                                console.log("Meeting updated, refreshing data...")
-                                setRefreshKey(prev => prev + 1)
+                                console.log("=== onMeetingUpdated callback called ===")
+                                console.log("Current refreshKey:", refreshKey)
+                                console.log("Setting new refreshKey...")
+                                setRefreshKey(prev => {
+                                  const newKey = prev + 1
+                                  console.log("New refreshKey:", newKey)
+                                  return newKey
+                                })
+                                console.log("=== onMeetingUpdated callback completed ===")
                               }}
                             />
                           </div>

@@ -126,16 +126,28 @@ export function EditMeetingModal({ meeting, employeeId, allPeople, onMeetingUpda
     
     setIsSubmitting(true)
     try {
-      console.log("Deleting meeting:", meeting._id)
+      console.log("Starting delete process for meeting:", meeting._id)
+      console.log("Calling deleteOneOnOne mutation...")
+      
       await deleteOneOnOne({ id: meeting._id as any })
-      console.log("Meeting deleted successfully")
-      toast({ title: "Meeting deleted successfully" })
+      
+      console.log("deleteOneOnOne mutation completed successfully")
+      console.log("Closing modal...")
       setIsOpen(false)
+      
+      console.log("Calling onMeetingUpdated callback...")
       onMeetingUpdated()
+      
+      console.log("Showing success toast...")
+      toast({ title: "Meeting deleted successfully" })
+      
+      console.log("Delete process completed successfully")
     } catch (error) {
       console.error("Failed to delete meeting:", error)
+      console.error("Error details:", error)
       toast({ title: "Failed to delete meeting", variant: "destructive" })
     } finally {
+      console.log("Setting isSubmitting to false")
       setIsSubmitting(false)
     }
   }
