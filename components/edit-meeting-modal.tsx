@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
 import { Plus, Trash2, Edit, Save, X } from "lucide-react"
 import { useMutation } from "convex/react"
 import { api } from "../convex/_generated/api"
@@ -188,6 +188,9 @@ export function EditMeetingModal({ meeting, employeeId, allPeople, onMeetingUpda
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit 1:1 Meeting</DialogTitle>
+          <DialogDescription>
+            Edit the details of this 1:1 meeting. You can modify the date, topics, status, workload, and action items.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
