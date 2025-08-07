@@ -93,16 +93,26 @@ export const updateRole = mutation({
 export const updateEmployee = mutation({
   args: { 
     id: v.id("employees"), 
+    name: v.optional(v.string()),
+    email: v.optional(v.string()),
     user_type: v.optional(v.union(v.literal("employee"), v.literal("lead"), v.literal("hr"))),
     manager_id: v.optional(v.union(v.id("employees"), v.null())),
     role: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    console.log("Updating employee:", args.id, "with data:", args)
+    
     const updates: any = {}
+    if (args.name !== undefined) updates.name = args.name
+    if (args.email !== undefined) updates.email = args.email
     if (args.user_type !== undefined) updates.user_type = args.user_type
     if (args.manager_id !== undefined) updates.manager_id = args.manager_id
     if (args.role !== undefined) updates.role = args.role
+    
+    console.log("Applying updates:", updates)
     await ctx.db.patch(args.id, updates)
+    
+    console.log("Employee updated successfully")
   },
 })
 
@@ -144,13 +154,22 @@ export const addEmployee = mutation({
     manager_id: v.optional(v.id("employees")),
   },
   handler: async (ctx, args) => {
-    await ctx.db.insert("employees", {
+    console.log("Adding new employee with data:", args)
+    
+    const employeeData = {
       name: args.name,
       email: args.email,
       role: args.role,
       user_type: args.user_type,
       manager_id: args.manager_id || undefined,
-    })
+      archived: false,
+    }
+    
+    console.log("Inserting employee data:", employeeData)
+    const newEmployeeId = await ctx.db.insert("employees", employeeData)
+    
+    console.log("Employee added successfully with ID:", newEmployeeId)
+    return newEmployeeId
   },
 })
 

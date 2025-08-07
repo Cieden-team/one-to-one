@@ -85,6 +85,8 @@ export function ManageEmployeesModal({ userEmail, isAdmin }: ManageEmployeesModa
     }
     
     try {
+      console.log("Adding new employee with data:", newEmployee)
+      
       await addEmployee({
         name: newEmployee.name,
         email: newEmployee.email,
@@ -93,27 +95,35 @@ export function ManageEmployeesModal({ userEmail, isAdmin }: ManageEmployeesModa
         manager_id: newEmployee.manager_id && newEmployee.manager_id !== "none" ? newEmployee.manager_id as any : undefined,
       })
       
+      console.log("Employee add mutation completed")
       setNewEmployee({ name: "", email: "", role: "", user_type: "employee", manager_id: "" })
       setShowAddForm(false)
       toast({ title: "Success", description: "Employee added successfully" })
     } catch (error) {
+      console.error("Failed to add employee:", error)
       toast({ title: "Error", description: "Failed to add employee", variant: "destructive" })
     }
   }
   
   const handleEditEmployee = async (id: string) => {
     try {
+      console.log("Updating employee:", id, "with form data:", editForm)
+      
       await updateEmployee({
         id: id as any,
+        name: editForm.name,
+        email: editForm.email,
         user_type: editForm.user_type,
         manager_id: editForm.manager_id && editForm.manager_id !== "none" ? editForm.manager_id as any : null,
         role: editForm.role,
       })
       
+      console.log("Employee update mutation completed")
       setEditingId(null)
       setEditForm({ name: "", email: "", role: "", user_type: "employee", manager_id: "" })
       toast({ title: "Success", description: "Employee updated successfully" })
     } catch (error) {
+      console.error("Failed to update employee:", error)
       toast({ title: "Error", description: "Failed to update employee", variant: "destructive" })
     }
   }
@@ -148,14 +158,17 @@ export function ManageEmployeesModal({ userEmail, isAdmin }: ManageEmployeesModa
   }
   
   const startEditing = (employee: any) => {
+    console.log("Starting edit for employee:", employee)
     setEditingId(employee._id)
-    setEditForm({
+    const editData = {
       name: employee.name,
       email: employee.email,
       role: employee.role,
       user_type: employee.user_type,
       manager_id: employee.manager_id || "none",
-    })
+    }
+    console.log("Setting edit form data:", editData)
+    setEditForm(editData)
   }
   
   const cancelEditing = () => {
