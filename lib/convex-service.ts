@@ -37,6 +37,4 @@ export const useFixUserTypes = () => {
   return useMutation(api.employees.fixUserTypes)
 }
 
-export const useTestAutoFill = () => {
-  return useQuery(api.employees.testAutoFillForAllLeadsAndHR)
-} 
+ 

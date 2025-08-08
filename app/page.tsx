@@ -13,7 +13,7 @@ import { ChevronDown, Filter, Plus, Users, Calendar, AlertTriangle } from "lucid
 import { format } from "date-fns"
 import Link from "next/link"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useEmployees, useCurrentUser, useTestAutoFill } from "@/lib/convex-service"
+import { useEmployees, useCurrentUser } from "@/lib/convex-service"
 import { useUser, UserButton } from "@clerk/nextjs"
 import type { EmployeeWithDetails } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
@@ -47,7 +47,7 @@ function DashboardContent() {
   const currentUser = useCurrentUser(userEmail)
   const { toast } = useToast()
   const { signOut } = useClerk()
-  const testAutoFill = useTestAutoFill()
+
 
 
   if (!currentUser) {
@@ -152,20 +152,7 @@ function DashboardContent() {
 
 
 
-  const handleTestAutoFill = () => {
-    console.log("=== AUTO-FILL TEST RESULTS ===")
-    console.log("Test data:", testAutoFill)
-    if (testAutoFill) {
-      console.log(`Total HR users: ${testAutoFill.hr}`)
-      console.log(`Total Lead users: ${testAutoFill.lead}`)
-      console.log("HR users:", testAutoFill.hrUsers)
-      console.log("Lead users:", testAutoFill.leadUsers)
-      toast({ 
-        title: "Auto-fill Test", 
-        description: `${testAutoFill.hr} HR, ${testAutoFill.lead} Lead users found` 
-      })
-    }
-  }
+
 
   return (
     <TooltipProvider>
@@ -183,16 +170,7 @@ function DashboardContent() {
                 </Button>
               </Link>
               {isAdmin && (
-                <>
-                  <ManageEmployeesModal userEmail={userEmail} isAdmin={isAdmin} />
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={handleTestAutoFill}
-                  >
-                    Test Auto-fill
-                  </Button>
-                </>
+                <ManageEmployeesModal userEmail={userEmail} isAdmin={isAdmin} />
               )}
               <ThemeToggle />
               <div className="relative group">
