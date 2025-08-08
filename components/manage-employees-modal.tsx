@@ -248,7 +248,7 @@ export function ManageEmployeesModal({ userEmail, isAdmin }: ManageEmployeesModa
                   />
                 </div>
                 <div>
-                  <Label htmlFor="new-type">Type</Label>
+                  <Label htmlFor="new-type">User Type</Label>
                   <Select
                     value={newEmployee.user_type}
                     onValueChange={(val) => setNewEmployee({ ...newEmployee, user_type: val as "employee" | "lead" | "hr" })}
@@ -305,7 +305,7 @@ export function ManageEmployeesModal({ userEmail, isAdmin }: ManageEmployeesModa
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead>User Type</TableHead>
                   <TableHead>Manager</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>

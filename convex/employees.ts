@@ -100,19 +100,27 @@ export const updateEmployee = mutation({
     role: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    console.log("Updating employee:", args.id, "with data:", args)
+    console.log("=== UPDATING EMPLOYEE ===")
+    console.log("Employee ID:", args.id)
+    console.log("Update data:", args)
     
     const updates: any = {}
     if (args.name !== undefined) updates.name = args.name
     if (args.email !== undefined) updates.email = args.email
-    if (args.user_type !== undefined) updates.user_type = args.user_type
+    if (args.user_type !== undefined) {
+      updates.user_type = args.user_type
+      console.log("Setting user_type to:", args.user_type)
+    }
     if (args.manager_id !== undefined) updates.manager_id = args.manager_id
     if (args.role !== undefined) updates.role = args.role
     
-    console.log("Applying updates:", updates)
+    console.log("Final updates to apply:", updates)
     await ctx.db.patch(args.id, updates)
     
-    console.log("Employee updated successfully")
+    // Перевіряємо результат
+    const updatedEmployee = await ctx.db.get(args.id)
+    console.log("Employee after update:", updatedEmployee)
+    console.log("=== UPDATE COMPLETED ===")
   },
 })
 
@@ -154,7 +162,9 @@ export const addEmployee = mutation({
     manager_id: v.optional(v.id("employees")),
   },
   handler: async (ctx, args) => {
-    console.log("Adding new employee with data:", args)
+    console.log("=== ADDING NEW EMPLOYEE ===")
+    console.log("Employee data:", args)
+    console.log("User type being set:", args.user_type)
     
     const employeeData = {
       name: args.name,
@@ -165,10 +175,14 @@ export const addEmployee = mutation({
       archived: false,
     }
     
-    console.log("Inserting employee data:", employeeData)
+    console.log("Final employee data to insert:", employeeData)
     const newEmployeeId = await ctx.db.insert("employees", employeeData)
     
-    console.log("Employee added successfully with ID:", newEmployeeId)
+    // Перевіряємо результат
+    const newEmployee = await ctx.db.get(newEmployeeId)
+    console.log("Employee after insertion:", newEmployee)
+    console.log("=== EMPLOYEE ADDED SUCCESSFULLY ===")
+    
     return newEmployeeId
   },
 })

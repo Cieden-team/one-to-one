@@ -13,7 +13,7 @@ import { ChevronDown, Filter, Plus, Users, Calendar, AlertTriangle } from "lucid
 import { format } from "date-fns"
 import Link from "next/link"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useEmployees, useCurrentUser, useFixUserTypes, useTestAutoFill } from "@/lib/convex-service"
+import { useEmployees, useCurrentUser, useTestAutoFill } from "@/lib/convex-service"
 import { useUser, UserButton } from "@clerk/nextjs"
 import type { EmployeeWithDetails } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
@@ -47,7 +47,6 @@ function DashboardContent() {
   const currentUser = useCurrentUser(userEmail)
   const { toast } = useToast()
   const { signOut } = useClerk()
-  const fixUserTypes = useFixUserTypes()
   const testAutoFill = useTestAutoFill()
 
 
@@ -151,16 +150,7 @@ function DashboardContent() {
   }).length
   const redStatusCount = (employees || []).filter((emp) => emp.last_meeting?.status === "Red").length
 
-  const handleFixUserTypes = async () => {
-    try {
-      const result = await fixUserTypes()
-      console.log("Fix user types result:", result)
-      toast({ title: "Success", description: "User types updated" })
-    } catch (error) {
-      console.error("Failed to fix user types:", error)
-      toast({ title: "Error", description: "Failed to update user types", variant: "destructive" })
-    }
-  }
+
 
   const handleTestAutoFill = () => {
     console.log("=== AUTO-FILL TEST RESULTS ===")
@@ -195,13 +185,6 @@ function DashboardContent() {
               {isAdmin && (
                 <>
                   <ManageEmployeesModal userEmail={userEmail} isAdmin={isAdmin} />
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={handleFixUserTypes}
-                  >
-                    Fix User Types
-                  </Button>
                   <Button 
                     variant="outline" 
                     size="sm"
