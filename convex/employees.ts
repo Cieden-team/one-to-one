@@ -241,6 +241,27 @@ export const fixUserTypes = mutation({
   }
 })
 
+export const getAllLeadsAndHR = query({
+  args: { user_email: v.string() },
+  handler: async (ctx, args) => {
+    const employees = await ctx.db.query("employees").collect()
+    const currentUser = employees.find(emp => emp.email === args.user_email)
+    
+    // Перевіряємо права доступу
+    if (!currentUser || (currentUser.user_type !== "hr" && currentUser.user_type !== "lead")) {
+      return []
+    }
+    
+    // Повертаємо всіх активних Lead та HR користувачів
+    const leadsAndHR = employees.filter(emp => 
+      !emp.archived && (emp.user_type === "lead" || emp.user_type === "hr")
+    )
+    
+    console.log(`Found ${leadsAndHR.length} Lead/HR users for ${currentUser.name}`)
+    return leadsAndHR
+  },
+})
+
 
 
 

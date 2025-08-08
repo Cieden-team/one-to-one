@@ -6,6 +6,10 @@ export const useEmployees = (userEmail?: string) => {
   return useQuery(api.employees.getWithLastMeeting, { user_email: userEmail })
 }
 
+export const useAllLeadsAndHR = (userEmail: string) => {
+  return useQuery(api.employees.getAllLeadsAndHR, { user_email: userEmail })
+}
+
 export const useCurrentUser = (email: string) => {
   return useQuery(api.employees.getCurrentUser, { email })
 }

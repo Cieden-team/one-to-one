@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Plus, Trash2, Calendar } from "lucide-react"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { useEmployee, useEmployees, useCurrentUser, useCreateOneOnOne } from "@/lib/convex-service"
+import { useEmployee, useEmployees, useCurrentUser, useCreateOneOnOne, useAllLeadsAndHR } from "@/lib/convex-service"
 import { useUser } from "@clerk/nextjs"
 import { useToast } from "@/components/ui/use-toast"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -29,6 +29,7 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
   
   const employee = useEmployee(params.id)
   const allPeople = useEmployees(userEmail) // HR бачить всіх
+  const allLeadsAndHR = useAllLeadsAndHR(userEmail) // Всі Lead та HR для автозаповнення
   const currentUser = useCurrentUser(userEmail)
   const createOneOnOne = useCreateOneOnOne()
 
@@ -92,9 +93,8 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
 
 
 
-  // Фільтруємо доступних людей (тільки HR та Lead) та сортуємо поточного користувача першим
-  const availablePeople = (allPeople || [])
-    .filter((emp) => emp.user_type === "hr" || emp.user_type === "lead")
+  // Використовуємо всіх Lead та HR для автозаповнення
+  const availablePeople = (allLeadsAndHR || [])
     .sort((a, b) => {
       // Поточний користувач першим
       if (a._id === currentUser?._id) return -1
@@ -107,6 +107,7 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
     })
 
   console.log("Available people:", availablePeople)
+  console.log("All Leads and HR:", allLeadsAndHR)
   console.log("Current personId:", personId)
   console.log("Current user:", currentUser)
   console.log("Action items:", actionItems)
