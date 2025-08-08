@@ -185,7 +185,7 @@ export const fixUserTypes = mutation({
     const employees = await ctx.db.query("employees").collect()
     
     // Визначаємо, хто є Lead
-    const leaderIds = new Set<string>()
+    const leaderIds = new Set()
     for (const emp of employees) {
       if (emp.manager_id) {
         // Знаходимо всіх, хто має підлеглих
@@ -224,6 +224,45 @@ export const fixUserTypes = mutation({
     
     console.log(`Updated ${updatedCount} employees`)
     return `Updated ${updatedCount} employees`
+  }
+})
+
+export const testAutoFillForAllLeadsAndHR = query({
+  handler: async (ctx) => {
+    const employees = await ctx.db.query("employees").collect()
+    
+    // Знаходимо всіх Lead та HR
+    const leadsAndHR = employees.filter(emp => emp.user_type === "lead" || emp.user_type === "hr")
+    
+    // Групуємо за типом
+    const hrUsers = leadsAndHR.filter(emp => emp.user_type === "hr")
+    const leadUsers = leadsAndHR.filter(emp => emp.user_type === "lead")
+    
+    // Перевіряємо, чи всі мають правильні дані
+    const results = leadsAndHR.map(emp => ({
+      name: emp.name,
+      email: emp.email,
+      user_type: emp.user_type,
+      role: emp.role,
+      has_id: !!emp._id,
+      has_manager: !!emp.manager_id,
+      is_archived: emp.archived
+    }))
+    
+    console.log("=== AUTO-FILL TEST RESULTS ===")
+    console.log(`Total HR users: ${hrUsers.length}`)
+    console.log(`Total Lead users: ${leadUsers.length}`)
+    console.log("HR users:", hrUsers.map(u => `${u.name} (${u.email})`))
+    console.log("Lead users:", leadUsers.map(u => `${u.name} (${u.email})`))
+    
+    return {
+      total: leadsAndHR.length,
+      hr: hrUsers.length,
+      lead: leadUsers.length,
+      hrUsers: hrUsers.map(u => ({ name: u.name, email: u.email })),
+      leadUsers: leadUsers.map(u => ({ name: u.name, email: u.email })),
+      allResults: results
+    }
   }
 })
 

@@ -29,10 +29,14 @@ export const useUpdateActionItem = () => {
   return useMutation(api.oneOnOnes.updateActionItem)
 }
 
-export const useSeedData = () => {
-  return useMutation(api.seedData.seedData)
-}
+// export const useSeedData = () => {
+//   return useMutation(api.seedData.seedData)
+// }
 
 export const useFixUserTypes = () => {
   return useMutation(api.employees.fixUserTypes)
+}
+
+export const useTestAutoFill = () => {
+  return useQuery(api.employees.testAutoFillForAllLeadsAndHR)
 } 
