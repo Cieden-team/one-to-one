@@ -56,6 +56,8 @@ export const create = mutation({
         text: v.string(),
         due_date: v.string(),
         done: v.boolean(),
+        responsible_id: v.optional(v.id("employees")),
+        created_by: v.optional(v.id("employees")),
       }),
     ),
   },
@@ -68,7 +70,13 @@ export const create = mutation({
     for (const item of action_items) {
       await ctx.db.insert("action_items", {
         one_on_one_id: meetingId,
-        ...item,
+        text: item.text,
+        due_date: item.due_date,
+        done: item.done,
+        responsible_id: item.responsible_id || undefined,
+        created_by: item.created_by || undefined,
+        progress: "in_progress", // Default progress
+        created_at: new Date().toISOString(), // Default created_at
       })
     }
 

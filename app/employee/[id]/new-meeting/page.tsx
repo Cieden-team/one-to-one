@@ -13,8 +13,6 @@ import { ArrowLeft, Plus, Trash2, Calendar } from "lucide-react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useEmployee, useEmployees, useCurrentUser, useCreateOneOnOne } from "@/lib/convex-service"
 import { useUser } from "@clerk/nextjs"
-import { useMutation } from "convex/react"
-import { api } from "../../../../convex/_generated/api"
 import { useToast } from "@/components/ui/use-toast"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -33,7 +31,6 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
   const allPeople = useEmployees(userEmail) // HR бачить всіх
   const currentUser = useCurrentUser(userEmail)
   const createOneOnOne = useCreateOneOnOne()
-  const createActionItem = useMutation(api.actionItems.createActionItem)
 
   // Автоматичне заповнення сьогоднішньої дати
   const today = new Date().toISOString().split('T')[0]
@@ -185,7 +182,9 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
         action_items: validActionItems.map(item => ({
           text: item.text,
           due_date: item.due_date,
-          done: false
+          done: false,
+          responsible_id: item.responsible_id as any,
+          created_by: currentUser?._id as any,
         })),
       }
       
@@ -195,35 +194,9 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
       
       console.log("Meeting created successfully:", meeting)
       
-      // Створюємо action items окремо з новою структурою
-      if (meeting && validActionItems.length > 0 && currentUser) {
-        console.log("Creating action items:", validActionItems)
-        
-        for (const item of validActionItems) {
-          try {
-            // Перевіряємо, що всі обов'язкові поля заповнені
-            if (!item.text.trim() || !item.due_date || !item.responsible_id) {
-              console.warn("Skipping action item with missing data:", item)
-              continue
-            }
-            
-            const actionItemData = {
-              one_on_one_id: meeting as any,
-              text: item.text,
-              due_date: item.due_date,
-              responsible_id: item.responsible_id as any,
-              created_by: currentUser._id as any,
-            }
-            
-            console.log("Creating action item with data:", actionItemData)
-            await createActionItem(actionItemData)
-            console.log("Action item created successfully:", item.text)
-          } catch (actionError) {
-            console.error("Failed to create action item:", actionError)
-            console.error("Action item data:", item)
-          }
-        }
-      }
+      // Action items вже створені через createOneOnOne мутацію
+      // Додаткове створення не потрібне
+      console.log("Action items were created automatically with the meeting")
       
       console.log("=== Form submission completed successfully ===")
       toast({ title: "Success", description: "Meeting created successfully" })
