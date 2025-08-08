@@ -66,6 +66,30 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
     }
   }, [personId, currentUser])
 
+  // Оновлюємо responsible_id в існуючих Action Items, якщо currentUser завантажився
+  useEffect(() => {
+    if (currentUser && currentUser._id && actionItems.length > 0 && employee) {
+      const updatedActionItems = actionItems.map(item => {
+        // Якщо responsible_id не встановлений або встановлений як employee._id, але currentUser доступний
+        if (!item.responsible_id || item.responsible_id === employee._id) {
+          console.log("Updating action item responsible_id to current user:", currentUser._id)
+          return { ...item, responsible_id: currentUser._id }
+        }
+        return item
+      })
+      
+      // Перевіряємо, чи потрібно оновлювати
+      const needsUpdate = updatedActionItems.some((item, index) => 
+        item.responsible_id !== actionItems[index]?.responsible_id
+      )
+      
+      if (needsUpdate) {
+        console.log("Updating action items with current user as responsible")
+        setActionItems(updatedActionItems)
+      }
+    }
+  }, [currentUser, actionItems.length, employee?._id])
+
 
 
   // Фільтруємо доступних людей (тільки HR та Lead) та сортуємо поточного користувача першим
@@ -85,6 +109,7 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
   console.log("Available people:", availablePeople)
   console.log("Current personId:", personId)
   console.log("Current user:", currentUser)
+  console.log("Action items:", actionItems)
   
   // Перевіряємо, чи поточний користувач має права на створення мітингів
   const canCreateMeetings = currentUser && (currentUser.user_type === "hr" || currentUser.user_type === "lead")
@@ -129,7 +154,10 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
   }
 
   const addActionItem = () => {
-    setActionItems([...actionItems, { text: "", due_date: "", responsible_id: employee._id }])
+    // Автозаповнюємо responsible_id поточним користувачем (HR/Lead), а не employee
+    const defaultResponsibleId = currentUser?._id || employee?._id
+    console.log("Adding action item with responsible_id:", defaultResponsibleId, "currentUser:", currentUser?._id)
+    setActionItems([...actionItems, { text: "", due_date: "", responsible_id: defaultResponsibleId }])
   }
 
   const removeActionItem = (index: number) => {
@@ -140,6 +168,11 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
     const updated = [...actionItems]
     updated[index] = { ...updated[index], [field]: value }
     setActionItems(updated)
+    
+    // Логуємо зміни responsible_id
+    if (field === "responsible_id") {
+      console.log(`Action item ${index} responsible_id changed to:`, value)
+    }
   }
 
   const getStatusExplanation = (status: string) => {
@@ -412,11 +445,19 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
                                     </SelectItem>
                                     {availablePeople.map((person) => (
                                       <SelectItem key={person._id} value={person._id}>
-                                        {person.name} ({person.user_type.toUpperCase()})
+                                        {person._id === currentUser?._id 
+                                          ? `${person.name} (You - ${person.user_type.toUpperCase()})`
+                                          : `${person.name} (${person.user_type.toUpperCase()})`
+                                        }
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
                                 </Select>
+                                {item.responsible_id === currentUser?._id && (
+                                  <p className="text-xs text-green-600 mt-1">
+                                    ✓ Auto-filled with current user
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>
