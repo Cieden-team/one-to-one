@@ -180,4 +180,51 @@ export const deleteEmployee = mutation({
   },
 })
 
+export const fixUserTypes = mutation({
+  handler: async (ctx) => {
+    const employees = await ctx.db.query("employees").collect()
+    
+    // Визначаємо, хто є Lead
+    const leaderIds = new Set<string>()
+    for (const emp of employees) {
+      if (emp.manager_id) {
+        // Знаходимо всіх, хто має підлеглих
+        const hasReports = employees.some(e => e.manager_id === emp._id)
+        if (hasReports) {
+          leaderIds.add(emp._id)
+        }
+      }
+    }
+    
+    console.log("Leader IDs:", Array.from(leaderIds))
+    
+    let updatedCount = 0
+    for (const emp of employees) {
+      let newUserType = emp.user_type
+      
+      // Логіка визначення user_type
+      if (emp.email === "yuriy.mykhasyak@cieden.com" || emp.email === "kateryna.gorodova@cieden.com") {
+        newUserType = "hr"
+      } else if (leaderIds.has(emp._id)) {
+        newUserType = "lead"
+      } else if (emp.role?.includes("Manager") || emp.role?.includes("Director") || emp.role?.includes("Head")) {
+        newUserType = "lead"
+      } else if (emp.role?.includes("Product Manager")) {
+        newUserType = "lead"
+      } else {
+        newUserType = "employee"
+      }
+      
+      if (newUserType !== emp.user_type) {
+        console.log(`Updating ${emp.name} (${emp.email}) from ${emp.user_type} to ${newUserType}`)
+        await ctx.db.patch(emp._id, { user_type: newUserType })
+        updatedCount++
+      }
+    }
+    
+    console.log(`Updated ${updatedCount} employees`)
+    return `Updated ${updatedCount} employees`
+  }
+})
+
 

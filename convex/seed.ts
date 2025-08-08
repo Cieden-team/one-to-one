@@ -64,8 +64,13 @@ export const seedData = mutation({
     
     const getUserType = (emp: typeof employeesData[0]) => {
       if (emp.email === "yuriy.mykhasyak@cieden.com") return "hr";
+      if (emp.email === "kateryna.gorodova@cieden.com") return "hr";
       if (leaderIds.has(emp.employee_id)) return "lead";
       if (emp.position === "co-founder") return "lead";
+      // Додатково перевіряємо позиції, які зазвичай є Lead
+      if (emp.position.includes("Manager") || emp.position.includes("Director") || emp.position.includes("Head")) return "lead";
+      // Спеціально для Product Manager/Business Analyst
+      if (emp.position.includes("Product Manager")) return "lead";
       return "employee";
     };
 
@@ -73,6 +78,7 @@ export const seedData = mutation({
     const oldIdToNewId = new Map<string, Id<"employees">>();
     for (const emp of employeesData) {
       const user_type = getUserType(emp);
+      console.log(`Setting ${emp.fullName} (${emp.email}) as ${user_type}`);
       const newId = await ctx.db.insert("employees", {
         name: emp.fullName,
         role: emp.position,

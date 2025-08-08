@@ -31,4 +31,8 @@ export const useUpdateActionItem = () => {
 
 export const useSeedData = () => {
   return useMutation(api.seedData.seedData)
+}
+
+export const useFixUserTypes = () => {
+  return useMutation(api.employees.fixUserTypes)
 } 
