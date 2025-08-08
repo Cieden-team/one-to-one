@@ -9,19 +9,23 @@ import { Label } from "./ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
 import { format } from "date-fns"
-import { Calendar, Clock, User, CheckCircle, AlertCircle, Archive } from "lucide-react"
+import { Calendar, Clock, User, CheckCircle, AlertCircle, Archive, AlertTriangle, SortAsc, SortDesc } from "lucide-react"
 import { useToast } from "./ui/use-toast"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 
 interface ActionItemsDashboardProps {
   userEmail: string
 }
 
 export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
-  const [progressFilter, setProgressFilter] = useState<string>("all")
+  const [activeTab, setActiveTab] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<string>("due_date")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const { toast } = useToast()
   
   const actionItems = useQuery(api.actionItems.getActionItems, { user_email: userEmail })
   const allEmployees = useQuery(api.employees.list, { user_email: userEmail })
+  const currentUser = useQuery(api.employees.getCurrentUser, { email: userEmail })
   const updateActionItem = useMutation(api.actionItems.updateActionItem)
   
   if (!actionItems) {
@@ -35,10 +39,87 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
     )
   }
   
-  // Фільтруємо за progress
-  const filteredItems = actionItems?.filter(item => 
-    progressFilter === "all" || item.progress === progressFilter
-  ) || []
+  // Функція для перевірки чи item просрочений
+  const isOverdue = (item: any) => {
+    if (!item.due_date || item.progress === "done") return false
+    const today = new Date()
+    const dueDate = new Date(item.due_date)
+    return today > dueDate
+  }
+
+  // Функція для фільтрації items
+  const getFilteredItems = () => {
+    if (!actionItems || !currentUser) return []
+    
+    let filtered = actionItems
+
+    // Фільтруємо за табом
+    switch (activeTab) {
+      case "created_by_me":
+        filtered = filtered.filter(item => item.created_by === currentUser._id)
+        break
+      case "assigned_to_me":
+        filtered = filtered.filter(item => item.responsible_id === currentUser._id)
+        break
+      case "in_progress":
+        filtered = filtered.filter(item => item.progress === "in_progress")
+        break
+      case "done":
+        filtered = filtered.filter(item => item.progress === "done")
+        break
+      case "overdue":
+        filtered = filtered.filter(item => isOverdue(item))
+        break
+      case "archive":
+        filtered = filtered.filter(item => item.progress === "done")
+        break
+      default: // "all"
+        // Для адміна показуємо все, для інших - тільки їхні items
+        if (currentUser.user_type !== "hr") {
+          filtered = filtered.filter(item => 
+            item.created_by === currentUser._id || 
+            item.responsible_id === currentUser._id
+          )
+        }
+    }
+
+    // Сортуємо
+    filtered.sort((a, b) => {
+      let aValue: any, bValue: any
+      
+      switch (sortBy) {
+        case "due_date":
+          aValue = a.due_date ? new Date(a.due_date).getTime() : 0
+          bValue = b.due_date ? new Date(b.due_date).getTime() : 0
+          break
+        case "progress":
+          aValue = a.progress || "in_progress"
+          bValue = b.progress || "in_progress"
+          break
+        case "employee":
+          aValue = a.employee_name || ""
+          bValue = b.employee_name || ""
+          break
+        case "created":
+          aValue = a.created_at ? new Date(a.created_at).getTime() : 0
+          bValue = b.created_at ? new Date(b.created_at).getTime() : 0
+          break
+        default:
+          aValue = a.due_date ? new Date(a.due_date).getTime() : 0
+          bValue = b.due_date ? new Date(b.due_date).getTime() : 0
+      }
+      
+      if (sortOrder === "asc") {
+        return aValue > bValue ? 1 : -1
+      } else {
+        return aValue < bValue ? 1 : -1
+      }
+    })
+
+    return filtered
+  }
+
+  const filteredItems = getFilteredItems()
   
   const getProgressColor = (progress: string) => {
     switch (progress) {
@@ -89,11 +170,30 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
   
 
   
+  // Оновлена статистика з урахуванням фільтрів
   const stats = {
     total: actionItems?.length || 0,
     done: actionItems?.filter(item => item.progress === "done").length || 0,
     inProgress: actionItems?.filter(item => item.progress === "in_progress").length || 0,
-    overdue: actionItems?.filter(item => item.progress === "overdue").length || 0,
+    overdue: actionItems?.filter(item => isOverdue(item)).length || 0,
+    createdByMe: actionItems?.filter(item => item.created_by === currentUser?._id).length || 0,
+    assignedToMe: actionItems?.filter(item => item.responsible_id === currentUser?._id).length || 0,
+  }
+
+  // Функція для зміни сортування
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      setSortBy(field)
+      setSortOrder("asc")
+    }
+  }
+
+  // Функція для отримання іконки сортування
+  const getSortIcon = (field: string) => {
+    if (sortBy !== field) return null
+    return sortOrder === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
   }
   
   return (
@@ -142,107 +242,231 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
         </Card>
       </div>
       
-      {/* Filters */}
+      {/* Action Items with Tabs */}
       <Card>
         <CardHeader>
           <CardTitle>Action Items</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Filter by progress:</span>
-              <Select value={progressFilter} onValueChange={setProgressFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Progress</SelectItem>
-                  <SelectItem value="done">Done</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="overdue">Overdue</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Badge variant="outline">
-              {filteredItems.length} items
-            </Badge>
-          </div>
-          
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Employee</TableHead>
-                  <TableHead>Responsible</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Progress</TableHead>
-                                      <TableHead>Created</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredItems.map((item) => (
-                    <TableRow key={item._id}>
-                    <TableCell className="max-w-xs">
-                      <div className="truncate">{item.text || "No description"}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{item.employee_name || "Unknown"}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm">{item.responsible_name || "Unassigned"}</span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">
-                          {item.due_date ? format(new Date(item.due_date), "MMM dd, yyyy") : "No date"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={item.progress || "in_progress"}
-                        onValueChange={(value) => {
-                          if (item && item._id) {
-                            handleProgressChange(item._id, value)
-                          } else {
-                            console.error("Cannot update progress for item without _id:", item)
-                            toast({ title: "Error", description: "Cannot update progress", variant: "destructive" })
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="done">Done</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
-                          <SelectItem value="overdue">Overdue</SelectItem>
-                          <SelectItem value="archived">Archived</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-muted-foreground">
-                        {item.created_at ? format(new Date(item.created_at), "MMM dd") : "Unknown"}
-                      </span>
-                    </TableCell>
-
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          
-          {filteredItems.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No action items found</p>
-            </div>
-          )}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="all">All ({stats.total})</TabsTrigger>
+              <TabsTrigger value="created_by_me">Created by me ({stats.createdByMe})</TabsTrigger>
+              <TabsTrigger value="assigned_to_me">Assigned to me ({stats.assignedToMe})</TabsTrigger>
+              <TabsTrigger value="in_progress">In Progress ({stats.inProgress})</TabsTrigger>
+              <TabsTrigger value="done">Done ({stats.done})</TabsTrigger>
+              <TabsTrigger value="overdue" className="text-red-600">Overdue ({stats.overdue})</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all" className="mt-4">
+              <div className="flex items-center justify-between mb-4">
+                <Badge variant="outline">{filteredItems.length} items</Badge>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Sort by:</span>
+                  <Select value={sortBy} onValueChange={handleSort}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="due_date">Due Date</SelectItem>
+                      <SelectItem value="progress">Progress</SelectItem>
+                      <SelectItem value="employee">Employee</SelectItem>
+                      <SelectItem value="created">Created</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                  >
+                    {sortOrder === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Employee</TableHead>
+                      <TableHead>Responsible</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Progress</TableHead>
+                      <TableHead>Created</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredItems.map((item) => (
+                      <TableRow key={item._id} className={isOverdue(item) ? "bg-red-50 dark:bg-red-950/20" : ""}>
+                        <TableCell className="max-w-xs">
+                          <div className="truncate">{item.text || "No description"}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{item.employee_name || "Unknown"}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">{item.responsible_name || "Unassigned"}</span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span className={`text-sm ${isOverdue(item) ? "text-red-600 font-medium" : ""}`}>
+                              {item.due_date ? format(new Date(item.due_date), "MMM dd, yyyy") : "No date"}
+                            </span>
+                            {isOverdue(item) && <AlertTriangle className="h-4 w-4 text-red-600" />}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={item.progress || "in_progress"}
+                            onValueChange={(value) => {
+                              if (item && item._id) {
+                                handleProgressChange(item._id, value)
+                              } else {
+                                console.error("Cannot update progress for item without _id:", item)
+                                toast({ title: "Error", description: "Cannot update progress", variant: "destructive" })
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="done">Done</SelectItem>
+                              <SelectItem value="in_progress">In Progress</SelectItem>
+                              <SelectItem value="overdue">Overdue</SelectItem>
+                              <SelectItem value="archived">Archived</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {item.created_at ? format(new Date(item.created_at), "MMM dd") : "Unknown"}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {filteredItems.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No action items found</p>
+                </div>
+              )}
+            </TabsContent>
+            
+            {/* Додаємо інші таби з такою ж структурою */}
+            {["created_by_me", "assigned_to_me", "in_progress", "done", "overdue"].map((tab) => (
+              <TabsContent key={tab} value={tab} className="mt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <Badge variant="outline">{filteredItems.length} items</Badge>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Sort by:</span>
+                    <Select value={sortBy} onValueChange={handleSort}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="due_date">Due Date</SelectItem>
+                        <SelectItem value="progress">Progress</SelectItem>
+                        <SelectItem value="employee">Employee</SelectItem>
+                        <SelectItem value="created">Created</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                    >
+                      {sortOrder === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Employee</TableHead>
+                        <TableHead>Responsible</TableHead>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead>Progress</TableHead>
+                        <TableHead>Created</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredItems.map((item) => (
+                        <TableRow key={item._id} className={isOverdue(item) ? "bg-red-50 dark:bg-red-950/20" : ""}>
+                          <TableCell className="max-w-xs">
+                            <div className="truncate">{item.text || "No description"}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">{item.employee_name || "Unknown"}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm">{item.responsible_name || "Unassigned"}</span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <span className={`text-sm ${isOverdue(item) ? "text-red-600 font-medium" : ""}`}>
+                                {item.due_date ? format(new Date(item.due_date), "MMM dd, yyyy") : "No date"}
+                              </span>
+                              {isOverdue(item) && <AlertTriangle className="h-4 w-4 text-red-600" />}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              value={item.progress || "in_progress"}
+                              onValueChange={(value) => {
+                                if (item && item._id) {
+                                  handleProgressChange(item._id, value)
+                                } else {
+                                  console.error("Cannot update progress for item without _id:", item)
+                                  toast({ title: "Error", description: "Cannot update progress", variant: "destructive" })
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="done">Done</SelectItem>
+                                <SelectItem value="in_progress">In Progress</SelectItem>
+                                <SelectItem value="overdue">Overdue</SelectItem>
+                                <SelectItem value="archived">Archived</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-muted-foreground">
+                              {item.created_at ? format(new Date(item.created_at), "MMM dd") : "Unknown"}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                {filteredItems.length === 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No action items found</p>
+                  </div>
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
         </CardContent>
       </Card>
     </div>
