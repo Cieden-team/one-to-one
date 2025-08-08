@@ -49,10 +49,22 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
 
   // Автозаповнення Conducted By поточним користувачем
   useEffect(() => {
+    console.log("Current user data:", currentUser)
     if (currentUser && currentUser._id) {
+      console.log("Setting personId to current user:", currentUser._id)
       setPersonId(currentUser._id)
+    } else {
+      console.log("Current user not available or missing _id")
     }
   }, [currentUser])
+
+  // Додаткова перевірка, якщо personId не встановлений, але currentUser доступний
+  useEffect(() => {
+    if (!personId && currentUser && currentUser._id) {
+      console.log("Setting personId from currentUser (fallback):", currentUser._id)
+      setPersonId(currentUser._id)
+    }
+  }, [personId, currentUser])
 
 
 
@@ -70,6 +82,13 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
       return a.name.localeCompare(b.name)
     })
 
+  console.log("Available people:", availablePeople)
+  console.log("Current personId:", personId)
+  console.log("Current user:", currentUser)
+  
+  // Перевіряємо, чи поточний користувач має права на створення мітингів
+  const canCreateMeetings = currentUser && (currentUser.user_type === "hr" || currentUser.user_type === "lead")
+
   if (employee === undefined) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -86,6 +105,21 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <p className="text-muted-foreground">Employee not found</p>
+          <Link href="/">
+            <Button className="mt-4">Back to Dashboard</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // Перевіряємо права доступу
+  if (!canCreateMeetings) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-muted-foreground">You don't have permission to create 1:1 meetings</p>
+          <p className="text-sm text-muted-foreground mt-2">Only HR and Lead users can create meetings.</p>
           <Link href="/">
             <Button className="mt-4">Back to Dashboard</Button>
           </Link>
@@ -249,7 +283,7 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
                     <Label htmlFor="person">1:1 Conducted By</Label>
                     <Select value={personId} onValueChange={setPersonId} required>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select person" />
+                        <SelectValue placeholder={personId ? "Loading..." : "Select person"} />
                       </SelectTrigger>
                       <SelectContent>
                         {availablePeople.map((person) => (
@@ -262,7 +296,17 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground mt-1">You are pre-selected. You can change to another HR or Lead if needed.</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {personId 
+                        ? "You are pre-selected. You can change to another HR or Lead if needed."
+                        : "Loading current user..."
+                      }
+                    </p>
+                    {personId && (
+                      <p className="text-xs text-green-600 mt-1">
+                        ✓ Auto-filled with current user
+                      </p>
+                    )}
                   </div>
                 </div>
 
