@@ -9,7 +9,7 @@ import { Label } from "./ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
 import { format } from "date-fns"
-import { Calendar, Clock, User, CheckCircle, AlertCircle, Archive, Edit, Save, X } from "lucide-react"
+import { Calendar, Clock, User, CheckCircle, AlertCircle, Archive } from "lucide-react"
 import { useToast } from "./ui/use-toast"
 
 interface ActionItemsDashboardProps {
@@ -18,13 +18,6 @@ interface ActionItemsDashboardProps {
 
 export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
   const [progressFilter, setProgressFilter] = useState<string>("all")
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({
-    text: "",
-    due_date: "",
-    responsible_id: "",
-    progress: "in_progress" as "done" | "in_progress" | "overdue" | "archived"
-  })
   const { toast } = useToast()
   
   const actionItems = useQuery(api.actionItems.getActionItems, { user_email: userEmail })
@@ -94,67 +87,7 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
   
 
   
-  const startEditing = (item: any) => {
-    try {
-      console.log("Starting edit for item:", item)
-      
-      if (!item || !item._id) {
-        console.error("Invalid item or missing _id:", item)
-        toast({ title: "Error", description: "Invalid item data", variant: "destructive" })
-        return
-      }
-      
-      setEditingId(item._id)
-      setEditForm({
-        text: item.text || "",
-        due_date: item.due_date || "",
-        responsible_id: item.responsible_id || "",
-        progress: item.progress || "in_progress"
-      })
-    } catch (error) {
-      console.error("Error in startEditing:", error)
-      toast({ title: "Error", description: "Failed to start editing", variant: "destructive" })
-    }
-  }
-  
-  const cancelEditing = () => {
-    setEditingId(null)
-    setEditForm({
-      text: "",
-      due_date: "",
-      responsible_id: "",
-      progress: "in_progress"
-    })
-  }
-  
-  const saveEditing = async (itemId: string) => {
-    try {
-      console.log("Saving edit for item:", itemId, "with form:", editForm)
-      
-      const updateData: any = {
-        id: itemId as any,
-        text: editForm.text,
-        due_date: editForm.due_date,
-        progress: editForm.progress
-      }
-      
-      // Тільки якщо responsible_id не пустий
-      if (editForm.responsible_id && editForm.responsible_id.trim() !== "") {
-        updateData.responsible_id = editForm.responsible_id as any
-      } else {
-        updateData.responsible_id = null
-      }
-      
-      console.log("Update data:", updateData)
-      
-      await updateActionItem(updateData)
-      setEditingId(null)
-      toast({ title: "Action item updated successfully" })
-    } catch (error) {
-      console.error("Error saving action item:", error)
-      toast({ title: "Failed to update action item", variant: "destructive" })
-    }
-  }
+
   
   const stats = {
     total: actionItems?.length || 0,
@@ -244,22 +177,14 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
                   <TableHead>Responsible</TableHead>
                   <TableHead>Due Date</TableHead>
                   <TableHead>Progress</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                                      <TableHead>Created</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredItems.map((item) => (
                     <TableRow key={item._id}>
                     <TableCell className="max-w-xs">
-                      {editingId === item._id ? (
-                        <Input
-                          value={editForm.text}
-                          onChange={(e) => setEditForm({ ...editForm, text: e.target.value })}
-                        />
-                      ) : (
-                        <div className="truncate">{item.text || "No description"}</div>
-                      )}
+                      <div className="truncate">{item.text || "No description"}</div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -268,128 +193,45 @@ export function ActionItemsDashboard({ userEmail }: ActionItemsDashboardProps) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {editingId === item._id ? (
-                        <Select
-                          value={editForm.responsible_id}
-                          onValueChange={(value) => setEditForm({ ...editForm, responsible_id: value })}
-                        >
-                          <SelectTrigger className="w-40">
-                            <SelectValue placeholder="Select responsible" />
-                          </SelectTrigger>
-                                                  <SelectContent>
-                          <SelectItem value="">Unassigned</SelectItem>
-                          {allEmployees?.map((emp) => (
-                            <SelectItem key={emp._id} value={emp._id}>
-                              {emp.name} ({emp.user_type?.toUpperCase() || "UNKNOWN"})
-                            </SelectItem>
-                          ))}
+                      <span className="text-sm">{item.responsible_name || "Unassigned"}</span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">
+                          {item.due_date ? format(new Date(item.due_date), "MMM dd, yyyy") : "No date"}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={item.progress || "in_progress"}
+                        onValueChange={(value) => {
+                          if (item && item._id) {
+                            handleProgressChange(item._id, value)
+                          } else {
+                            console.error("Cannot update progress for item without _id:", item)
+                            toast({ title: "Error", description: "Cannot update progress", variant: "destructive" })
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="done">Done</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="overdue">Overdue</SelectItem>
+                          <SelectItem value="archived">Archived</SelectItem>
                         </SelectContent>
-                        </Select>
-                      ) : (
-                        <span className="text-sm">{item.responsible_name || "Unassigned"}</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {editingId === item._id ? (
-                        <Input
-                          type="date"
-                          value={editForm.due_date}
-                          onChange={(e) => setEditForm({ ...editForm, due_date: e.target.value })}
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            {item.due_date ? format(new Date(item.due_date), "MMM dd, yyyy") : "No date"}
-                          </span>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {editingId === item._id ? (
-                        <Select
-                          value={editForm.progress}
-                          onValueChange={(value) => setEditForm({ ...editForm, progress: value as any })}
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="done">Done</SelectItem>
-                            <SelectItem value="in_progress">In Progress</SelectItem>
-                            <SelectItem value="overdue">Overdue</SelectItem>
-                            <SelectItem value="archived">Archived</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Select
-                          value={item.progress || "in_progress"}
-                                                      onValueChange={(value) => {
-                              if (item && item._id) {
-                                handleProgressChange(item._id, value)
-                              } else {
-                                console.error("Cannot update progress for item without _id:", item)
-                                toast({ title: "Error", description: "Cannot update progress", variant: "destructive" })
-                              }
-                            }}
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="done">Done</SelectItem>
-                            <SelectItem value="in_progress">In Progress</SelectItem>
-                            <SelectItem value="overdue">Overdue</SelectItem>
-                            <SelectItem value="archived">Archived</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
+                      </Select>
                     </TableCell>
                     <TableCell>
                       <span className="text-sm text-muted-foreground">
                         {item.created_at ? format(new Date(item.created_at), "MMM dd") : "Unknown"}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {editingId === item._id ? (
-                          <>
-                                                          <Button 
-                                size="sm" 
-                                variant="outline" 
-                                onClick={() => {
-                                  if (item && item._id) {
-                                    saveEditing(item._id)
-                                  } else {
-                                    console.error("Cannot save item without _id:", item)
-                                    toast({ title: "Error", description: "Cannot save this item", variant: "destructive" })
-                                  }
-                                }}
-                              >
-                              <Save className="h-4 w-4" />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={cancelEditing}>
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => {
-                              if (item && item._id) {
-                                startEditing(item)
-                              } else {
-                                console.error("Cannot edit item without _id:", item)
-                                toast({ title: "Error", description: "Cannot edit this item", variant: "destructive" })
-                              }
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
+
                   </TableRow>
                 ))}
               </TableBody>
