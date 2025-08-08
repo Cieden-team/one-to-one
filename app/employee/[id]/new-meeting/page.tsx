@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowLeft, Plus, Trash2, Calendar } from "lucide-react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useEmployee, useEmployees, useCurrentUser, useCreateOneOnOne } from "@/lib/convex-service"
@@ -22,7 +21,6 @@ import { ThemeToggle } from "@/components/theme-toggle"
 interface ActionItem {
   text: string
   due_date: string
-  done: boolean
   responsible_id: string
 }
 
@@ -100,7 +98,7 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
   }
 
   const addActionItem = () => {
-    setActionItems([...actionItems, { text: "", due_date: "", done: false, responsible_id: employee._id }])
+    setActionItems([...actionItems, { text: "", due_date: "", responsible_id: employee._id }])
   }
 
   const removeActionItem = (index: number) => {
@@ -128,6 +126,9 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    console.log("=== Starting form submission ===")
+    console.log("Form data:", { date, personId, topics, status, workload, actionItems })
     
     // Валідація обов'язкових полів
     if (!employee || !personId) {
@@ -159,6 +160,12 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
       item.text.trim() !== "" && item.due_date && item.responsible_id
     )
     
+    console.log("Action items validation:", {
+      total: actionItems.length,
+      valid: validActionItems.length,
+      validItems: validActionItems
+    })
+    
     if (actionItems.length > 0 && validActionItems.length !== actionItems.length) {
       console.error("Some action items have missing required fields")
       toast({ title: "Error", description: "Please fill in all action item fields", variant: "destructive" })
@@ -168,27 +175,25 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
     setIsSubmitting(true)
     
     try {
-      console.log("Creating meeting with data:", {
-        employee_id: employee._id,
-        date,
-        person_id: personId,
-        topics,
-        status,
-        workload,
-        actionItems: actionItems.filter((item) => item.text.trim() !== "")
-      })
-      
-      const meeting = await createOneOnOne({
+      const meetingData = {
         employee_id: employee._id as any,
         date,
         person_id: personId as any,
         topics,
         status: status as "Green" | "Yellow" | "Red",
         workload: workload as "Low" | "Balanced" | "Overloaded",
-        action_items: validActionItems,
-      })
+        action_items: validActionItems.map(item => ({
+          text: item.text,
+          due_date: item.due_date,
+          done: false
+        })),
+      }
       
-      console.log("Meeting created:", meeting)
+      console.log("Creating meeting with data:", meetingData)
+      
+      const meeting = await createOneOnOne(meetingData)
+      
+      console.log("Meeting created successfully:", meeting)
       
       // Створюємо action items окремо з новою структурою
       if (meeting && validActionItems.length > 0 && currentUser) {
@@ -202,25 +207,32 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
               continue
             }
             
-            await createActionItem({
+            const actionItemData = {
               one_on_one_id: meeting as any,
               text: item.text,
               due_date: item.due_date,
               responsible_id: item.responsible_id as any,
               created_by: currentUser._id as any,
-            })
-            console.log("Action item created:", item.text)
+            }
+            
+            console.log("Creating action item with data:", actionItemData)
+            await createActionItem(actionItemData)
+            console.log("Action item created successfully:", item.text)
           } catch (actionError) {
             console.error("Failed to create action item:", actionError)
+            console.error("Action item data:", item)
           }
         }
       }
       
+      console.log("=== Form submission completed successfully ===")
       toast({ title: "Success", description: "Meeting created successfully" })
       router.push(`/employee/${params.id}`)
     } catch (error) {
       console.error("Failed to create meeting:", error)
+      console.error("Error details:", error)
       toast({ title: "Error", description: "Failed to create meeting", variant: "destructive" })
+    } finally {
       setIsSubmitting(false)
     }
   }
@@ -353,10 +365,6 @@ export default function NewMeeting({ params }: { params: { id: string } }) {
                     <div className="space-y-3">
                       {actionItems.map((item, index) => (
                         <div key={index} className="flex items-start gap-3 p-4 border rounded-lg">
-                          <Checkbox
-                            checked={item.done}
-                            onCheckedChange={(checked) => updateActionItem(index, "done", checked as boolean)}
-                          />
                           <div className="flex-1 space-y-2">
                             <Input
                               placeholder="Action item description"
