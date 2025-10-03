@@ -71,6 +71,7 @@ const mockEmployees = [
 export default function DemoDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [workloadFilter, setWorkloadFilter] = useState<string>("all")
+  const [roleFilter, setRoleFilter] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [filtersOpen, setFiltersOpen] = useState(false)
 
@@ -80,6 +81,7 @@ export default function DemoDashboard() {
   const filteredEmployees = employees.filter((employee) => {
     if (statusFilter !== "all" && employee.last_meeting?.status !== statusFilter) return false
     if (workloadFilter !== "all" && employee.last_meeting?.workload !== workloadFilter) return false
+    if (roleFilter !== "all" && employee.role !== roleFilter) return false
     if (searchQuery && !employee.name.toLowerCase().includes(searchQuery.toLowerCase())) return false
     return true
   })
@@ -202,7 +204,7 @@ export default function DemoDashboard() {
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <CardContent className="pt-0">
-                  <div className="grid gap-4 md:grid-cols-4">
+                  <div className="grid gap-4 md:grid-cols-5">
                     <div>
                       <label className="text-sm font-medium mb-2 block">Search</label>
                       <Input
@@ -239,12 +241,32 @@ export default function DemoDashboard() {
                         </SelectContent>
                       </Select>
                     </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Role</label>
+                      <Select value={roleFilter} onValueChange={setRoleFilter}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Roles</SelectItem>
+                          <SelectItem value="Product Manager">Product Manager</SelectItem>
+                          <SelectItem value="Designer">Designer</SelectItem>
+                          <SelectItem value="Developer">Developer</SelectItem>
+                          <SelectItem value="Manager">Manager</SelectItem>
+                          <SelectItem value="Director">Director</SelectItem>
+                          <SelectItem value="Head">Head</SelectItem>
+                          <SelectItem value="HR">HR</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div className="flex items-end">
                       <Button
                         variant="outline"
                         onClick={() => {
                           setStatusFilter("all")
                           setWorkloadFilter("all")
+                          setRoleFilter("all")
                           setSearchQuery("")
                         }}
                         className="w-full"
