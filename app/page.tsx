@@ -13,7 +13,7 @@ import { ChevronDown, Filter, Plus, Users, Calendar, AlertTriangle } from "lucid
 import { format } from "date-fns"
 import Link from "next/link"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useEmployees, useCurrentUser } from "@/lib/convex-service"
+import { useEmployees, useCurrentUser, useDistinctRoles } from "@/lib/convex-service"
 import { useUser, UserButton } from "@clerk/nextjs"
 import type { EmployeeWithDetails } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
@@ -46,6 +46,7 @@ function DashboardContent() {
   const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || ""
   const employees = useEmployees(userEmail)
   const currentUser = useCurrentUser(userEmail)
+  const distinctRoles = useDistinctRoles(userEmail)
   const { toast } = useToast()
   const { signOut } = useClerk()
 
@@ -278,14 +279,11 @@ function DashboardContent() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Roles</SelectItem>
-                          <SelectItem value="Product Manager">Product Manager</SelectItem>
-                          <SelectItem value="Designer">Designer</SelectItem>
-                          <SelectItem value="Developer">Developer</SelectItem>
-                          <SelectItem value="Manager">Manager</SelectItem>
-                          <SelectItem value="Director">Director</SelectItem>
-                          <SelectItem value="Head">Head</SelectItem>
-                          <SelectItem value="HR">HR</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
+                          {distinctRoles?.map((role) => (
+                            <SelectItem key={role} value={role}>
+                              {role}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>

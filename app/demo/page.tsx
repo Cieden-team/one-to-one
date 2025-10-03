@@ -77,6 +77,11 @@ export default function DemoDashboard() {
 
   const employees = mockEmployees
 
+  // Extract distinct roles from mock data
+  const distinctRoles = [...new Set(employees.map(emp => emp.role))]
+    .filter(role => role && role.trim() !== "")
+    .sort()
+
   // Filter employees
   const filteredEmployees = employees.filter((employee) => {
     if (statusFilter !== "all" && employee.last_meeting?.status !== statusFilter) return false
@@ -249,14 +254,11 @@ export default function DemoDashboard() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Roles</SelectItem>
-                          <SelectItem value="Product Manager">Product Manager</SelectItem>
-                          <SelectItem value="Designer">Designer</SelectItem>
-                          <SelectItem value="Developer">Developer</SelectItem>
-                          <SelectItem value="Manager">Manager</SelectItem>
-                          <SelectItem value="Director">Director</SelectItem>
-                          <SelectItem value="Head">Head</SelectItem>
-                          <SelectItem value="HR">HR</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
+                          {distinctRoles?.map((role) => (
+                            <SelectItem key={role} value={role}>
+                              {role}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>

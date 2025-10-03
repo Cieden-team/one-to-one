@@ -262,6 +262,33 @@ export const getAllLeadsAndHR = query({
   },
 })
 
+export const getDistinctRoles = query({
+  args: { user_email: v.string() },
+  handler: async (ctx, args) => {
+    const employees = await ctx.db.query("employees").collect()
+    const currentUser = employees.find(emp => emp.email === args.user_email)
+    
+    // Перевіряємо права доступу
+    if (!currentUser || (currentUser.user_type !== "hr" && currentUser.user_type !== "lead")) {
+      return []
+    }
+    
+    // Фільтруємо співробітників залежно від рівня доступу
+    let filteredEmployees = employees.filter(emp => !emp.archived)
+    if (currentUser.user_type === "lead") {
+      filteredEmployees = filteredEmployees.filter((emp) => emp.manager_id === currentUser._id)
+    }
+    
+    // Отримуємо унікальні ролі
+    const distinctRoles = [...new Set(filteredEmployees.map(emp => emp.role))]
+      .filter(role => role && role.trim() !== "") // Видаляємо пусті ролі
+      .sort() // Сортуємо за алфавітом
+    
+    console.log(`Found ${distinctRoles.length} distinct roles for ${currentUser.name}:`, distinctRoles)
+    return distinctRoles
+  },
+})
+
 
 
 

@@ -10,6 +10,10 @@ export const useAllLeadsAndHR = (userEmail: string) => {
   return useQuery(api.employees.getAllLeadsAndHR, { user_email: userEmail })
 }
 
+export const useDistinctRoles = (userEmail: string) => {
+  return useQuery(api.employees.getDistinctRoles, { user_email: userEmail })
+}
+
 export const useCurrentUser = (email: string) => {
   return useQuery(api.employees.getCurrentUser, { email })
 }
