@@ -13,7 +13,7 @@ import { ChevronDown, Filter, Plus, Users, Calendar, AlertTriangle } from "lucid
 import { format } from "date-fns"
 import Link from "next/link"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useEmployees, useCurrentUser, useDistinctRoles } from "@/lib/convex-service"
+import { useEmployees, useCurrentUser } from "@/lib/convex-service"
 import { useUser, UserButton } from "@clerk/nextjs"
 import type { EmployeeWithDetails } from "@/lib/types"
 import { useToast } from "@/components/ui/use-toast"
@@ -46,7 +46,6 @@ function DashboardContent() {
   const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses?.[0]?.emailAddress || ""
   const employees = useEmployees(userEmail)
   const currentUser = useCurrentUser(userEmail)
-  const distinctRoles = useDistinctRoles(userEmail)
   const { toast } = useToast()
   const { signOut } = useClerk()
 
@@ -88,6 +87,11 @@ function DashboardContent() {
       </div>
     )
   }
+
+  // Extract distinct roles from current employees data
+  const distinctRoles = employees ? [...new Set(employees.map(emp => emp.role))]
+    .filter(role => role && role.trim() !== "")
+    .sort() : []
 
   // Filter employees
   let filteredEmployees = employees || []
